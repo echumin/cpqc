@@ -1,8 +1,8 @@
 function [configs] = f_subj_configs(configs, subjID)
     
-    % ------------- Initialize path locations and file names --------------
-    configs.path2EPI = fullfile(configs.path2data,subjID,configs.ses,configs.EPIdir);
-    configs.path2regressors = fullfile(configs.path2EPI,configs.path2reg);  
+    
+
+    % configs.path2regressors = fullfile(configs.path2EPI,configs.path2reg);  
     % This needs to be expanded to all nuissance reg options
     configs.path2_resting_vol = fullfile(configs.path2EPI,configs.resting_vol);   
     configs.timeseriesDir = sprintf('TimeSeries_%s%s',configs.nR,configs.post_nR);

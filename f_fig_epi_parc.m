@@ -1,61 +1,69 @@
-function [fig_out] = f_fig_epi_parc(data,configs,subjID)
-    Subj_T1 = fullfile(configs.path2data,subjID,configs.ses,configs.T1dir);
-    path2EPI = fullfile(configs.path2data,subjID,configs.ses,configs.EPIdir);
-    % get a list of parcellation files
-    MeanVol=MRIread(fullfile(path2EPI,'2_epi_meanvol.nii.gz'));
-    parcs=dir(fullfile(path2EPI,'rT1_GM_parc*clean*'));
-    midslice=round(size(MeanVol.vol,3)/2);
-    slices=[midslice-15 midslice-9 midslice-2 midslice+2 midslice+9 midslice+15];
-    % find max T1 intensity
-    Emax=round(max(max(max(MeanVol.vol))));
-    % for each parcellation
-    numparcs = length(parcs);
-    maxIdx=double.empty;
-    for p=1:numparcs
-        EPIp=MRIread(fullfile(path2EPI,parcs(p).name)); % load parcellation
-        maxIdx(end+1)=max(unique(EPIp.vol)); % find max index value in parcellation
-        
-        % initialize figure
-        if p==1
-            fig_out=figure;
-            fig_out.Units='inches';
-            height = 5*numparcs; % set 5in for each parcellation
-            fig_out.Position=[1 1 20 height];
-        end
-        
-        for n=1:length(slices) % for each representatice slice
-            numplot=n+(length(slices)*(p-1));
-            subplot(numparcs,length(slices),numplot)
-            fig_out(1)=imagesc(MeanVol.vol(:,:,slices(n))); % plot T1 slice
-            parc_title = strrep(parcs(p).name,'rT1_GM_parc_','');
-            parc_title = strrep(parc_title,'_clean','');
-            parc_title = strrep(parc_title,'.nii.gz','');
-            text(5,10,parc_title,'Color','red','FontSize',10)
-            hold on
-            % scale parcellation IDs to ID+twice the maximun T1 intensity
-            % this ensures the color portion of the colormap is used
-            mslice=EPIp.vol(:,:,slices(n))+Emax;
-            mslice(mslice<=Emax)=0;
-            fig_out(2)=imagesc(mslice); % plot parcellation slice
-            a=mslice; a(a>0)=0.7;
-            fig_out(2).AlphaData = a; % set transparency
-            set(gca,'Visible','off') % hide axes
-            hold off
-            clear mslice
+function f_fig_epi_parc(configs,subjID,linkdir)
+
+
+if isempty(configs.ses)
+    sesList=dir(fullfile(configs.path2data,subjID,'ses*'));
+    sesList = struct2cell(sesList)';
+    sesList = sesList(:,1);
+else
+    sesList{1}=configs.ses;
+end
+
+for se=1:length(sesList)
+    ses = sesList{se};
+    sub_path=fullfile(configs.path2data,subjID,ses);
+    if ~exist(sub_path,'dir')
+        fprintf(2,'%s/%s - Directory does not exist! Exiting...\n',subjID,ses)
+        return
+    else
+        qcpath=fullfile(sub_path,'qc'); %output directory
+        if ~exist(qcpath,'dir')
+            mkdir(qcpath) % make output directory if it doesn't exist
         end
     end
-    % generate colormap that is a joined grayscale (low values) and
-    % colors (high values); 2x size the number of nodes in parcellation.
-    c2map=gray(Emax);
-    c3map=lines(max(maxIdx));
-    cpmap=vertcat(c2map,c3map);
-    colormap(cpmap)
-    sgtitle(sprintf('%s: EPI-GM parc overlays',subjID),'Interpreter','none')
-    fileout = fullfile(configs.paths.QAdir,sprintf('09_epi_parc.png'));
-    count=length(dir(strcat(fileout(1:end-4),'*')));
-    if count > 0
-        fileout = fullfile(configs.paths.QAdir,sprintf('09_epi_parc_v%d.png',count+1));
+    %%
+    path2EPI = fullfile(sub_path,'func');
+    fprintf('---- %s -> ', ses)
+    if ~exist(path2EPI,'dir')
+        fprintf(' no func directory.\n')
+    else
+        MeanVol=fullfile(path2EPI,'2_epi_meanvol.nii.gz');
+
+        if isempty(configs.parcs)
+            % get a list of parcellation files 
+            parcs=dir(fullfile(path2EPI,'rT1_GM_parc*clean*'));
+            % remove the dilated versions
+            idx=double.empty;
+            for j=1:length(parcs)
+                if ~isempty(strfind(parcs(j).name,'dil'))
+                    idx(end+1)=j; %#ok<*SAGROW>
+                end
+            end
+            parcs(idx)=[];
+            nP=length(parcs);
+            for p=1:nP
+                pt = extractBetween(parcs(p).name,'parc_','.nii');
+                configs.parcs{p}=pt{1};
+                clear pt
+            end
+        end
+
+        if exist(MeanVol,'file')
+            filename = fullfile(qcpath,[subjID '_' ses '_7-epi_parc_vols']);
+            count=length(dir(strcat(filename,'*')));
+            if count > 0
+                filename = [filename '_v' num2str(count+1)];
+            end
+    
+            if exist('linkdir','var')
+                f_parc_overlay_gif(subjID,ses,MeanVol,path2EPI,configs.parcs,filename,linkdir)
+            else
+                f_parc_overlay_gif(subjID,ses,MeanVol,path2EPI,configs.parcs,filename)
+            end
+   
+            fprintf('done.\n')
+        else
+            fprintf(2,'%s - %s - no EPI Meanvol found.\n',subjID,ses)
+        end
     end
-    print(fileout,'-dpng','-r600')
-    close all
 end

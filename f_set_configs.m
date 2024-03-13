@@ -5,35 +5,7 @@
 
 function [configs] = f_set_configs()
 
-    % ------------- Initialize path locations and file names --------------
-    configs.path2SM = '/N/project/connpipe/ConnPipelineSM';
-    configs.path2data = '/N/project/kbase-imaging/kbase1-qc/CPQC/test_subj/';
-    configs.path2QC = '/N/project/kbase-imaging/kbase1-qc/CPQC/test_subj/';
-    
-    % --------------------- Define subjects to run ------------------------
-    % Option A: Specify a directory containing all subjects
-    % subjectList = dir(fullfile(path2data,'NAN0003*'));   
-    
-    % Option B: Specify individual subject name(s)
-    configs.subjectList(1).name = 'sub-BR0001'; 
 
-    % Specify visit session (ses-v0, ses-v2, ses-v4, etc.)
-    configs.ses = 'ses-v0'; % If none set to ''
-
-    % ----------------- Specify the QC sections to run --------------------
-    % Set to 1 the modalities you wish to create QA figures for:
-    configs.section_T1brainmask = 1;
-    configs.section_T1reg = 1;
-    configs.section_T1parc = 1;
-    configs.section_EPI = 1;
-    configs.section_T1masks = 0; % We recommend running this section alone 
-                                 % and manually rotating the 3D image 
-                                 % for inspection 
-    
-    % ------------------------ Specify T1 & EPI ---------------------------
-    % These variables should be set up to match the config.sh settings
-    configs.T1dir = 'anat';
-    configs.EPIdir = 'func';
 
     % ------------------------ Regression params --------------------------
     configs.path2reg = 'AROMA/aCompCor';  % Other options may be: 

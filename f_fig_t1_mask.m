@@ -1,43 +1,51 @@
-function [fig_out, configs] = f_fig_t1_mask(data,configs,subjID)
-    if isfile(configs.T1fpath) && isfile(configs.maskfpath)
-        T1=MRIread(configs.T1fpath);
-        mask=MRIread(configs.maskfpath);
-        % Select representative slices from T1 volume
-        midslice=round(size(T1.vol,3)/2);
-        slices=[midslice-30 midslice-15 midslice midslice+25 midslice+40];
-        % initialize figure
-        fig_out=figure;
-        fig_out.Units='inches';
-        fig_out.Position=[1 1 20 5];
-        % generate a grayscale loropmap with red as the highest intensity color
-        cmap=colormap(gray(128));
-        cmap(129,:)=[1 0 0];
-        colormap(cmap)
-        % For each representative slice
-        for i=1:5
-            subplot(1,5,i) % create plot in figure
-            tslice=T1.vol(:,:,slices(i)); % select & display T1 slice
-            fig_out(1)=imagesc(tslice);
-            hold on
-            mslice=mask.vol(:,:,slices(i)); % select matching brain mask slice
-            % set mask value to 1+ highest intensity in T1 slice
-            mslice(mslice==1)=max(max(tslice))+1;
-            fig_out(2)=imagesc(mslice); % overlay mask
-            fig_out(2).AlphaData = 0.5; % set mask transparency
-            set(gca,'Visible','off') % hide axes
-            hold off
-            clear tslice mslice
-        end
-        % Add title to figure and save as high resolution png
-        sgtitle(sprintf('%s: T1 brain mask overlay',subjID),'Interpreter','none')
-        fileout = fullfile(configs.paths.QAdir,'04_fig_t1_mask.png');
-        count=length(dir(strcat(fileout(1:end-4),'*')));
-        if count > 0
-            fileout = fullfile(configs.paths.QAdir,sprintf('04_fig_t1_mask_v%d.png',count+1));
-        end
-        print(fileout,'-dpng','-r600')
-        close all
+function f_fig_t1_mask(configs,subjID,flag,linkdir)
+
+if isempty(configs.ses)
+    sesList=dir(fullfile(configs.path2data,subjID,'ses*'));
+    sesList = struct2cell(sesList)';
+    sesList = sesList(:,1);
+else
+    sesList{1}=configs.ses;
+end
+
+for se=1:length(sesList)
+    ses = sesList{se};
+    sub_path=fullfile(configs.path2data,subjID,ses);
+    if ~exist(sub_path,'dir')
+        fprintf(2,'%s/%s - Directory does not exist! Exiting...\n',subjID,ses)
+        return
     else
-        disp('no T1_fov_denoised and/or T1_brain_mask found.')
+        qcpath=fullfile(sub_path,'qc'); %output directory
+        if ~exist(qcpath,'dir')
+            mkdir(qcpath) % make output directory if it doesn't exist
+        end
     end
+    
+    %% 1-Brain Mask Check   
+    % 
+        Subj_T1=fullfile(sub_path,'anat/T1_fov_denoised.nii');
+        Subj_BM=fullfile(sub_path,'anat/T1_brain_mask_filled.nii.gz');
+        
+        if isfile(Subj_T1) && isfile(Subj_BM)
+            fprintf('---- %s -> ', ses)
+            filename = fullfile(qcpath,[subjID '_' ses '_1-brain_mask']);
+            count=length(dir(strcat(filename,'*')));
+            if count > 0
+                filename = [filename '_v' num2str(count+1)];
+            end 
+            
+            if flag==1
+                if exist('linkdir','var')
+                    f_bm_overlay_png(subjID,ses,Subj_T1,Subj_BM,3,filename,linkdir)
+                else
+                    f_bm_overlay_png(subjID,ses,Subj_T1,Subj_BM,3,filename)
+                end
+            elseif flag==2
+                f_bm_overlay_gif(subjID,ses,Subj_T1,Subj_BM,3,filename)
+            end
+            fprintf('done.\n')
+      
+        end
+            close all
+            clear ses
 end

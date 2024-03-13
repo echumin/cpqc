@@ -12,150 +12,345 @@
 % https://link/to/documentation.com
 % =========================================================================
 
-% Toggle figures on/off
-toggle_fig1 = 0; % Subject motion
-toggle_fig2 = 0; % MNI contour 
-toggle_fig3 = 0; % T1 brain masks
-toggle_fig4 = 1; % T1 parcellations 
-toggle_fig5 = 0; % EPI brain masks
-toggle_fig6 = 1; % EPI parcellations
-toggle_fig7 = 0; % Regression plots
-toggle_fig8 = 0; % FC distributions
-toggle_fig9 = 0; % Statistical DVARS
+%% -- Pipeline Supplement -- %%
+configs.path2SM = '/N/project/kbase-imaging/connpipe_job_test/ConnPipelineSM';
 
-% If data already loaded, re-load the first subject anyway?
-load_first = 1; % Toggle on/off (1 == yes, re-load the subject)
+%% -- Dataset Info -- %
+configs.path2data = '/N/project/HCPaging/iadrc-bids/derivatives/connpipe';
 
-% Toggle which data to load
-load_motion = 1; % Load motion data
-load_pre = 1; % Load pre-regression data
-load_post = 1; % Load post-regression data
-load_gs = 0; % Load global signal regression data
-load_parc = 1; % Load parcellation data
-load_masks = 1; % Load tissue masks
-load_vals = [load_motion, load_pre, load_post, load_gs, load_parc, load_masks];
+% Leave empty to compile from path2data directories; otherwise a cell of IDs
+configs.sub = [];
 
-% Specify which FC distribution correlation plots to save
-toggle_pearson = 0;
-toggle_spearman = 0;
-toggle_zscore = 1;
-distribs = [toggle_pearson, toggle_spearman, toggle_zscore];
+% leave empty to loop over all available sesssions for a subject
+configs.ses = [];
 
-% Set-up FSL
-paths.FSL='/N/soft/rhel7/fsl/6.0.1b/bin';
-fsl_config = fullfile(paths.FSL,'..','etc','fslconf','fsl.sh');
-fsl_config_run = sprintf('. %s',fsl_config);
-fsl_status = system(fsl_config_run);
+%% -- Links -- %%
+% Create symbolic links in new deriv directory for QC.
+LinkOut = 1;
+LinkDirName = 'connQC';
 
-% Initialize QC configuration settings
-configs = f_set_configs();
-addpath(genpath(configs.path2dvars));
-addpath(configs.path2nifti_tools);
-addpath(genpath(configs.path2SM));
-addpath(genpath(fullfile(configs.path2SM,'toolbox_matlab_nifti')));
+%% -- Toggle figures on/off -- %%
+% -- anat -- %
+toggle.fig1 = 0; % T1 brain masks: 1=png 2=gif
+toggle.fig2 = 0; % MNI contour 
+toggle.fig3 = 0; % ROI masks (subcortical, ventricle, cerebellar)
+toggle.fig4 = 0; % T1 parcellations
 
-% Iterate over subjects
-for subject=1:length(configs.subjectList)
-    subjID = configs.subjectList(subject).name;
-    disp(['========= QC SUBJECT ',subjID,' ========='])
+% -- func -- %
+toggle.fig5 = 0; % Subject motion
+toggle.fig6 = 0; % EPI brain masks: 1=png 2=gif
+toggle.fig7 = 0; % EPI parcellations
 
-    % Initialize subject configuration settings
-    [configs] = f_subj_configs(configs,subjID);
+% -- nuissance regression func -- "
+% funcreg is a global flag that needs to be on for subcequent flags to prevent unnecessary overhead.
+funcreg = 0; 
+    toggle.fig8 = 0; % Regression plots
+    toggle.fig9 = 0; % Time-Series, ROI size, and FC
 
-    % Load the data
-    if exist('data', 'var') && subject == 1 && load_first == 0
-        disp('Data already loaded. Continuing...')
-    else
-        disp('Loading data...')
-        [data, configs] = f_load_data(configs,subjID,load_vals);
+% -- dwi -- %
+toggle.fig10 = 1; % DWI EDDY and DTIFIT brain masks: 1=png 2=gif
+% registration
+% connectivity
+
+
+%% -- Optional Parameter Presets -- %%
+% For any variable left empty, figures for all identified options will be
+% ran, otherwise only preselected parameters will be searched for.
+
+configs.parcs = {};
+% or
+%configs.parcs = {'DKT','schaefer200y7','Tian2','FSLsubcort','buckner-crblm','suit-crblm'};
+%configs.parcs = {'DKT','FSLsubcort','Tian2'};
+
+configs.nuisanceMOT = {};
+% or
+%configs.nuisanceMOT = {'AROMA'};
+%configs.nuisanceMOT = {'HMPreg'};
+
+configs.nuisanceTIS = {};
+% or
+%configs.nuisanceTIS = {'aCompCor'};
+%configs.nuisanceTIS = {'meanPhysReg'};
+
+configs.GS = [];
+% or
+%configs.GS = 1;
+%configs.GS = 0;
+
+%% --------------------------------------------------------------------- %%
+sub = buildsubjlist(configs.sub,configs.path2data);
+
+if LinkOut == 1
+    Linkdir=[fileparts(configs.path2data) '/' LinkDirName];
+    if ~exist(Linkdir,'dir')
+        mkdir(Linkdir)
     end
-
-    % Subject motion
-    if toggle_fig1 == 1
-        disp('Generating MCFLIRT MOTION figure...')
-        figure1 = f_fig_mcflirt_mot(data,configs,subjID);
-    else
-        disp('MCFLIRT MOTION - Figure excluded. Continuing...')
-    end
-    close all
-
-    % MNI contour
-    if toggle_fig2 == 1
-        disp('Generating MNI CONTOUR figure...')
-        figure2 = f_fig_mni_contour(data,configs,subjID);
-    else
-        disp('MNI CONTOUR - Figure excluded. Continuing...')
-    end
-    close all
-
-    % T1 brain masks
-    if toggle_fig3 == 1
-        disp('Generating T1 MASK figure...')
-        figure3 = f_fig_t1_mask(data,configs,subjID);
-    else
-        disp('T1 MASK - Figure excluded. Continuing...')
-    end
-    close all
-
-    % T1 parcellations
-    if toggle_fig4 == 1
-        disp('Generating T1 PARC figure...')
-        figure4 = f_fig_t1_parc(data,configs,subjID);
-    else
-        disp('T1 PARC - Figure excluded. Continuing...')
-    end
-    close all
-
-    % EPI brain masks
-    if toggle_fig5 == 1
-        disp('Generating EPI MASK figure...')
-        figure5 = f_fig_epi_mask(data,configs,subjID);
-    else
-        disp('EPI MASK - Figure excluded. Continuing...')
-    end
-    close all
-
-    % EPI parcellations
-    if toggle_fig6 == 1
-        disp('Generating EPI PARC figure...')
-        figure6 = f_fig_epi_parc(data,configs,subjID);
-    else
-        disp('EPI PARC - Figure excluded. Continuing...')
-    end
-    close all
-
-    % Regression plots
-    if toggle_fig7 == 1
-        disp('Generating REGRESSION figure...')
-        figure7 = f_fig_regression(data,configs,subjID);
-    else
-        disp('REGRESSION - Figure excluded. Continuing...')
-    end
-    close all
-
-    % FC distributions
-    if toggle_fig8 == 1
-        disp('Generating FC DISTRIBUTIONS figure...')
-        try
-            figure8 = f_fig_fc_distrib(data,configs,subjID,distribs);
-        catch
-            disp('Error: Figure 8, parcellations not found.')
-            disp('Make sure correct parcellations are specified.')
-        end
-    else
-        disp('FC DISTRIBUTIONS - Figure excluded. Continuing...')
-    end
-    close all
-
-    % Statistical DVARS
-    if toggle_fig9 == 1
-        disp('Generating DVARS STATS figure...')
-        figure9 = f_fig_dvars_stats(data,configs,subjID);
-    else
-        disp('DVARS STATS - Figure excluded. Continuing...')
-    end
-    close all
-
 end
+
+%% -- anat -- %
+% T1 brain masks
+if toggle.fig1 ~= 0
+    disp('Generating T1_brain_mask figures for:')
+    for ss = 1:length(sub)
+        fprintf('-- %s -> \n', sub{ss})
+        if LinkOut==1
+            f_fig_t1_mask(configs,sub{ss},toggle.fig1,Linkdir); %DONE - NEEDS COMMENTING
+        else
+            f_fig_t1_mask(configs,sub{ss},toggle.fig1); %DONE - NEEDS COMMENTING
+        end
+    end
+end
+
+% MNI contour
+if toggle.fig2 == 1
+    disp('Generating MNI CONTOUR figures for:')
+    for ss = 1:length(sub)
+        fprintf('-- %s -> \n', sub{ss})
+        f_fig_mni_contour(configs,sub{ss});
+    end   
+end
+
+% T1 subcortical roi masks
+if toggle.fig3 == 1
+    disp('Generating T1 ROI figures for:')
+    for ss = 1:length(sub)
+        fprintf('-- %s -> \n', sub{ss})
+        if LinkOut==1
+            fprintf('CSF and Cerebellum:\n')
+            f_fig_t1_roi(configs,sub{ss},Linkdir)
+            fprintf('Subcortical:\n')
+            f_fig_t1_subc(configs,sub{ss},Linkdir)
+        else
+            fprintf('CSF and Cerebellum:\n')
+            f_fig_t1_roi(configs,sub{ss})
+            fprintf('Subcortical:\n')
+            f_fig_t1_subc(configs,sub{ss})
+        end
+    end
+end
+
+% T1 parcellations
+if toggle.fig4 == 1
+    disp('Generating T1_GM_parc figures for:')
+    for ss = 1:length(sub)
+        fprintf('-- %s -> \n', sub{ss})
+        if LinkOut==1
+            f_fig_t1_parc(configs,sub{ss},Linkdir);
+        else
+            f_fig_t1_parc(configs,sub{ss});
+        end
+    end
+end
+
+%% -- func -- %%
+% Subject motion
+if toggle.fig5 == 1
+    disp('Generating MCFLIRT MOTION figures for:')
+    for ss = 1:length(sub)
+        fprintf('-- %s -> \n', sub{ss})
+        if LinkOut==1
+            f_fig_mcflirt_mot(configs,sub{ss},Linkdir);
+        else
+            f_fig_mcflirt_mot(configs,sub{ss});
+        end
+    end
+end
+
+% EPI brain masks
+if toggle.fig6 ~= 0
+    disp('Generating EPI MASK figures for:')
+    for ss = 1:length(sub)
+        fprintf('-- %s -> \n', sub{ss})
+        if LinkOut==1
+            f_fig_epi_mask(configs,sub{ss},toggle.fig6,Linkdir);
+        else
+            f_fig_epi_mask(configs,sub{ss},toggle.fig6);
+        end
+    end
+end
+
+% EPI parcellations
+if toggle.fig7 == 1
+    disp('Generating EPI PARC figures for:')
+    for ss = 1:length(sub)
+        fprintf('-- %s -> \n', sub{ss})
+        if LinkOut==1
+            f_fig_epi_parc(configs,sub{ss},Linkdir);
+        else
+            f_fig_epi_parc(configs,sub{ss});
+        end
+    end
+end
+
+%%  -- func - nuissance regression checks -- %%
+if funcreg == 1
+for ss=1:length(sub)
+    disp('Generating EPI Nuisance Regression figures for:')
+    fprintf('-- %s -> \n', sub{ss})
+    
+    if isempty(configs.ses)
+        sesList=dir(fullfile(configs.path2data,sub{ss},'ses*'));
+        sesList = struct2cell(sesList)';
+        sesList = sesList(:,1);
+    else
+        sesList{1}=configs.ses;
+    end
+    
+    % ------------- Initialize path locations and file names --------------
+
+    for se=1:length(sesList)
+        ses = sesList{se};
+        sub_path=fullfile(configs.path2data,sub{ss},ses);
+        configs.path2EPI = fullfile(sub_path,'func');
+        fprintf('---- /%s -> ',ses)
+
+        if ~exist(configs.path2EPI,'dir')
+            fprintf(2,'func directory does not exist.\n')
+        else
+
+            if isempty(configs.nuisanceMOT)
+                tmp = dir(configs.path2EPI);
+                tmp(1:2)=[];
+                tmp(~[tmp.isdir])=[];
+                tmp=struct2cell(tmp);
+                configs.nuisanceMOT = tmp(1,:); clear tmp
+            end
+        
+            for nM = 1:length(configs.nuisanceMOT)
+                configs.path2nuisance = fullfile(configs.path2EPI,configs.nuisanceMOT{nM});
+        
+                if isempty(configs.nuisanceTIS)
+                    if exist([configs.path2nuisance '/aCompCor'],'dir')
+                        configs.nuisanceTIS{1} = 'aCompCor';
+                    elseif exist([configs.path2nuisance '/aCompCorr'],'dir')
+                        configs.nuisanceTIS{1} = 'aCompCorr';
+                    end
+                    if exist([configs.path2nuisance '/meanPsysReg'],'dir')
+                        if isempty(configs.nuisanceTIS)
+                            configs.nuisanceTIS{1} = 'meanPhysReg';
+                        else
+                            configs.nuisanceTIS{2} = 'meanPhysReg';
+                        end
+                    end
+                end
+        
+                for nT = 1:length(configs.nuisanceTIS)
+                    configs.path2nuisanceTIS = fullfile(configs.path2nuisance,configs.nuisanceTIS{nT});
+        
+                    funcvolfiles = dir([configs.path2nuisanceTIS '/7_epi*nii.gz']);
+                    funcvolfiles=struct2cell(funcvolfiles); 
+                    funcvolfiles=funcvolfiles(1,:);
+                    gsidx=~cellfun(@isempty,(cellfun(@(x) strfind(x,'Gs'),funcvolfiles,'UniformOutput',false)));
+                    if configs.GS == 1
+                        idx=find(gsidx);
+                        for ii=1:length(idx)
+                            funcvolpaths{ii} = fullfile(configs.path2nuisanceTIS,funcvolfiles{idx(ii)});
+                        end
+                    elseif configs.GS == 0
+                        idx=find(~gsidx);
+                        for ii=1:length(idx)
+                            funcvolpaths{ii} = fullfile(configs.path2nuisanceTIS,funcvolfiles{idx(ii)});
+                        end
+                    elseif isempty(configs.GS)
+                        for ii= 1:length(gsidx)
+                            funcvolpaths{ii} = fullfile(configs.path2nuisanceTIS,funcvolfiles{ii});
+                        end
+                    end
+         
+                    % Residual plots
+                    if toggle.fig8 == 1
+                        disp('Generating voxel residuals figure...')
+                        if LinkOut==1
+                            f_fig_residual(configs.path2EPI,funcvolpaths,sub{ss},ses,Linkdir);
+                        else
+                            f_fig_residual(configs.path2EPI,funcvolpaths,sub{ss},ses);
+                        end             
+                        fprintf('done.\n')
+                    end
+                    close all
+                
+                    % Regional Time-series
+                    if toggle.fig9 == 1
+                        if nT==1 && nM==1
+                            disp('-- -- Generating time-series summaries figures:')
+                        end
+                        fprintf('-- -- -- %s %s -> \n',configs.nuisanceMOT{nM},configs.nuisanceTIS{nT})
+                        if LinkOut==1
+                            f_fig_timeseries(configs.path2EPI,configs.parcs,funcvolpaths,sub{ss},ses,Linkdir);
+                        else
+                            f_fig_timeseries(configs.path2EPI,configs.parcs,funcvolpaths,sub{ss},ses);
+                        end
+                        fprintf('done.\n')
+                    end
+                    close all
+                end
+            end
+        end
+        clear ses
+    end
+    clear sesList
+end
+end
+
+%% -- dwi -- %
+% Check DWI brain masks
+if toggle.fig10 ~= 0
+    disp('Generating DWI mask figures for:')
+    for ss = 1:length(sub)
+        fprintf('-- %s -> \n', sub{ss})
+        if LinkOut==1
+            f_fig_dwi_mask(configs,sub{ss},toggle.fig10,Linkdir);
+        else
+            f_fig_dwi_mask(configs,sub{ss},toggle.fig10);
+        end
+    end
+end
+
+
+% registration
+
+% connectivity
+
+
+
+
+
+
+%%
+function sub = buildsubjlist(sub,pathderiv)
+    if isempty(sub)
+        disp('Building subject list from derivative directory.')
+        sub = dir([pathderiv '/sub-*']);
+    end
+        disp('Checking format of input subject list')
+        if isstruct(sub) == 1
+            disp('-> Converting structure to cell.')
+            sub = struct2cell(sub)';
+            sub = sub(:,1);
+        elseif iscell(sub) == 1
+            [rr,cc] = size(sub);
+            if rr < cc
+                disp('Number of columns exceeds rows. Transposing sub')
+                sub=sub';
+            end
+            if cc > 1
+                fprintf(2,'More than 1 column is sub is not allowed.\n')
+                sub=[];
+                return
+            end
+        else
+            fprintf(2,'Input must be struct or cell.\n')
+            sub=[];
+            return
+        end
+end
+
+
+
+
+
+
+
+
 
 
