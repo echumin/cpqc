@@ -17,8 +17,8 @@ midSslice=floor(size(UL,2)/2);
 
 mn=min([midAslice midSslice]);
 
-Aslices=(midAslice-mn:4:midAslice+mn);
-Sslices=(midSslice-mn:4:midSslice+mn);
+Aslices=(midAslice-mn:10:midAslice+mn);
+Sslices=(midSslice-mn:10:midSslice+mn);
 if Aslices(1)==0; Aslices(1)=1; end
 if Sslices(1)==0; Sslices(1)=1; end
 
@@ -53,7 +53,7 @@ for p=1:nP
     % concatenate
     Pstack = cat(2,Pstack,Pvols{2,p});
 end
-f=figure('Units','inches','Position',[1 1 3*nP 6],'Color','k'); 
+f=figure('Units','inches','Position',[1 1 3*nP 6],'Color','k','Visible','off'); 
 c2map=gray(128);
 c3map=lines(maxIdx);
            
@@ -62,7 +62,7 @@ for n=1:size(Pstack,3)
     ax1=axes;
     ax2=axes;
     imagesc(ax1,Stack(:,:,n)); % plot T1
-    a=Pstack(:,:,n); a(a>0)=0.7;
+    a=single(Pstack(:,:,n)); a(a>0)=0.7;
     imagesc(ax2,Pstack(:,:,n),AlphaData=a); % overlay mask
     axis(ax1,'image')
     colormap(ax1,c2map);
@@ -88,5 +88,5 @@ end
 close all
 
 if exist('linkdir','var')
-    system(['ln -sf ' outname '.png ' linkdir '/']);
+    system(['ln -sf ' outname '.gif ' linkdir '/']);
 end

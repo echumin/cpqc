@@ -1,4 +1,4 @@
-function f_bm_overlay_gif(subjID,ses,underlay,overlay,outname)
+function f_bm_overlay_gif(scanID,underlay,overlay,outname)
 
 UL=niftiread(underlay);
 OL=niftiread(overlay);
@@ -56,7 +56,7 @@ for n=1:length(Sslices)
     hold off
     end
        
-    sgtitle(sprintf('%s %s',subjID,ses),'Interpreter','none','Color','white')
+    sgtitle(sprintf('%s %s',scanID{1},scanID{2}),'Interpreter','none','Color','white')
     drawnow
     % convert plots into iamges
     frame=getframe(f);

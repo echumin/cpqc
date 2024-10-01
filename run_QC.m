@@ -13,26 +13,24 @@
 % =========================================================================
 
 %% -- Pipeline Supplement -- %%
-configs.path2SM = '/N/project/kbase-imaging/connpipe_job_test/ConnPipelineSM';
+configs.path2SM = '/N/u/echumin/Quartz/img_proc_tools/ConnPipelineSM';
 
 %% -- Dataset Info -- %
-configs.path2data = '/N/project/HCPaging/iadrc-bids/derivatives/connpipe';
+configs.path2data = '/N/project/HCPaging/iadrc2024q3/derivatives/connpipe';
+%configs.path2data = '/N/project/kbase-imaging/kbase1-bids/derivatives/connpipe';
 
 % Leave empty to compile from path2data directories; otherwise a cell of IDs
-configs.sub = [];
-
-% leave empty to loop over all available sesssions for a subject
-configs.ses = [];
+configs.scans = subj_reqc;
 
 %% -- Links -- %%
 % Create symbolic links in new deriv directory for QC.
 LinkOut = 1;
-LinkDirName = 'connQC';
+LinkDirName = 'connQC/mask_and_mni_run3';
 
 %% -- Toggle figures on/off -- %%
 % -- anat -- %
-toggle.fig1 = 0; % T1 brain masks: 1=png 2=gif
-toggle.fig2 = 0; % MNI contour 
+toggle.fig1 = 1; % T1 brain masks: 1=png 2=gif
+toggle.fig2 = 1; % MNI contour 1=png 2=gif
 toggle.fig3 = 0; % ROI masks (subcortical, ventricle, cerebellar)
 toggle.fig4 = 0; % T1 parcellations
 
@@ -48,7 +46,7 @@ funcreg = 0;
     toggle.fig9 = 0; % Time-Series, ROI size, and FC
 
 % -- dwi -- %
-toggle.fig10 = 1; % DWI EDDY and DTIFIT brain masks: 1=png 2=gif
+toggle.fig10 = 0; % DWI EDDY and DTIFIT brain masks: 1=png 2=gif
 % registration
 % connectivity
 
@@ -78,7 +76,7 @@ configs.GS = [];
 %configs.GS = 0;
 
 %% --------------------------------------------------------------------- %%
-sub = buildsubjlist(configs.sub,configs.path2data);
+sub = buildscanlist(configs.scans,configs.path2data);
 
 if LinkOut == 1
     Linkdir=[fileparts(configs.path2data) '/' LinkDirName];
@@ -91,22 +89,26 @@ end
 % T1 brain masks
 if toggle.fig1 ~= 0
     disp('Generating T1_brain_mask figures for:')
-    for ss = 1:length(sub)
-        fprintf('-- %s -> \n', sub{ss})
+    for ss = 1:size(sub,1)
+        fprintf('-- %s %s -> \n', sub{ss,1}, sub{ss,2})
         if LinkOut==1
-            f_fig_t1_mask(configs,sub{ss},toggle.fig1,Linkdir); %DONE - NEEDS COMMENTING
+            f_fig_t1_mask(configs,sub(ss,:),toggle.fig1,Linkdir); %DONE - NEEDS COMMENTING
         else
-            f_fig_t1_mask(configs,sub{ss},toggle.fig1); %DONE - NEEDS COMMENTING
+            f_fig_t1_mask(configs,sub(ss,:),toggle.fig1); %DONE - NEEDS COMMENTING
         end
     end
 end
 
 % MNI contour
-if toggle.fig2 == 1
+if toggle.fig2 ~= 0
     disp('Generating MNI CONTOUR figures for:')
-    for ss = 1:length(sub)
-        fprintf('-- %s -> \n', sub{ss})
-        f_fig_mni_contour(configs,sub{ss});
+    for ss = 1:size(sub,1)
+        fprintf('-- %s %s -> \n', sub{ss,1}, sub{ss,2})
+        if LinkOut==1
+            f_fig_mni_contour(configs,sub(ss,:),toggle.fig2,Linkdir);
+        else
+            f_fig_mni_contour(configs,sub(ss,:),toggle.fig2);
+        end
     end   
 end
 
@@ -314,35 +316,34 @@ end
 
 
 
-
-
 %%
-function sub = buildsubjlist(sub,pathderiv)
-    if isempty(sub)
-        disp('Building subject list from derivative directory.')
+function scans = buildscanlist(scans,pathderiv)
+    if isempty(scans)
+        disp('Building scan list from derivative directory (All subjects and sessions).')
+        scans=cell.empty;
         sub = dir([pathderiv '/sub-*']);
+        for ss=1:length(sub)
+            ses=dir(fullfile(sub(ss).folder,sub(ss).name,'ses*'));
+            for ee=1:length(ses)
+                scans{end+1,1}=sub(ss).name;
+                scans{end,2}=ses(ee).name;
+            end
+            clear ses
+        end
     end
-        disp('Checking format of input subject list')
-        if isstruct(sub) == 1
-            disp('-> Converting structure to cell.')
-            sub = struct2cell(sub)';
-            sub = sub(:,1);
-        elseif iscell(sub) == 1
-            [rr,cc] = size(sub);
-            if rr < cc
-                disp('Number of columns exceeds rows. Transposing sub')
-                sub=sub';
-            end
-            if cc > 1
-                fprintf(2,'More than 1 column is sub is not allowed.\n')
-                sub=[];
-                return
-            end
-        else
-            fprintf(2,'Input must be struct or cell.\n')
-            sub=[];
+    disp('Checking format of input subject list')
+    if iscell(scans) == 1
+        [~,cc] = size(scans);
+        if cc ~= 2
+            disp('Number of columns not 2! [sub- ses-].')
+            disp('Scan list must be a two column cell of sub- and ses-')
             return
         end
+   
+    else
+        fprintf(2,'Input must be a cell.\n')
+        return
+    end
 end
 
 

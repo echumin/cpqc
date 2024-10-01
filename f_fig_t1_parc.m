@@ -11,6 +11,7 @@ end
 
 for se=1:length(sesList)
     ses = sesList{se};
+    fprintf('---- %s -> ', ses)
     sub_path=fullfile(configs.path2data,subjID,ses);
     if ~exist(sub_path,'dir')
         fprintf(2,'%s/%s - Directory does not exist! Exiting...\n',subjID,configs.ses)
@@ -47,7 +48,7 @@ for se=1:length(sesList)
     %% Generate figure
     T1f=fullfile(Subj_T1,'T1_fov_denoised.nii');
     if exist(T1f,'file')
-        filename = fullfile(qcpath,[subjID '_' configs.ses '_4-parc_vols']);
+        filename = fullfile(qcpath,[subjID '_' ses '_4-parc_vols']);
         count=length(dir(strcat(filename,'*')));
         if count > 0
             filename = [filename '_v' num2str(count+1)];

@@ -1,5 +1,5 @@
 
-function f_bm_overlay_png(subjID,ses,underlay,overlay,dim,outname,linkdir)
+function f_bm_overlay_png(scanID,underlay,overlay,dim,outname,linkdir)
 
 % Load anatomical underlay
 UL=niftiread(underlay);
@@ -14,11 +14,26 @@ else
 end
 
 % Select representative slices from T1 volume
+if dim==3
+    sz1=size(UL,1);
+elseif dim==2
+    sz1=size(UL,3);
+elseif dim==1
+    sz1=size(UL,2);
+end
 sz=size(UL,dim);
-slc = [.1 .2 .35 .5 .65 .8 .85 ];
+
+% first and last are dim1 sagittal additions
+slc = [.4 .2 .35 .45 .55 .65 .8 .6 ];
 slices=zeros(1,length(slc));
 for ii=1:length(slc)
-    slices(ii)=floor(sz*slc(ii));
+    if ii==1
+        slices(ii)=floor(sz1*slc(ii));
+    elseif ii==length(slc)
+        slices(ii)=floor(sz1*slc(ii));
+    else
+        slices(ii)=floor(sz*slc(ii));
+    end
 end
 
 % initialize figure
@@ -35,14 +50,29 @@ for j=1:length(OL)
 for i=1:length(slices)
     nexttile
     if dim==3
-        tslice=rot90(squeeze((UL(:,:,slices(i))))); % select & display T1 slice
-        mslice=rot90(squeeze(OL{j}(:,:,slices(i)))); % select matching brain mask slice
+        if i==1 || i==length(slices)
+            tslice=rot90(squeeze((UL(slices(i),:,:)))); % select & display T1 slice
+            mslice=rot90(squeeze(OL{j}(slices(i),:,:))); % select matching brain mask slice
+        else
+            tslice=rot90(squeeze((UL(:,:,slices(i))))); % select & display T1 slice
+            mslice=rot90(squeeze(OL{j}(:,:,slices(i)))); % select matching brain mask slice
+        end
     elseif dim==2
-        tslice=rot90(squeeze((UL(:,slices(i),:)))); % select & display T1 slice
-        mslice=rot90(squeeze(OL{j}(:,slices(i),:))); % select matching brain mask slice
+        if i==1 || i==length(slices)
+            tslice=rot90(squeeze((UL(:,:,slices(i))))); % select & display T1 slice
+            mslice=rot90(squeeze(OL{j}(:,:,slices(i)))); % select matching brain mask slice
+        else
+            tslice=rot90(squeeze((UL(:,slices(i),:)))); % select & display T1 slice
+            mslice=rot90(squeeze(OL{j}(:,slices(i),:))); % select matching brain mask slice
+        end
     elseif dim==1
-        tslice=rot90(squeeze((UL(slices(i),:,:)))); % select & display T1 slice
-        mslice=rot90(squeeze(OL{j}(slices(i),:,:))); % select matching brain mask slice
+        if i==1 || i==length(slices)
+            tslice=rot90(squeeze((UL(:,slices(i),:)))); % select & display T1 slice
+            mslice=rot90(squeeze(OL{j}(:,slices(i),:))); % select matching brain mask slice
+        else
+            tslice=rot90(squeeze((UL(slices(i),:,:)))); % select & display T1 slice
+            mslice=rot90(squeeze(OL{j}(slices(i),:,:))); % select matching brain mask slice
+        end
     end
 
     fig_out(1)=imagesc(tslice); axis image
@@ -59,7 +89,7 @@ end
 end
 
 % Add title to figure and save as high resolution png
-sgtitle(sprintf('%s %s',subjID,ses),'Interpreter','none')    
+sgtitle(sprintf('%s %s',scanID{1},scanID{2}),'Interpreter','none')    
 print([outname '.png'],'-dpng','-r300');
 close all
 
