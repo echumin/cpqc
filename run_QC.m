@@ -3,8 +3,7 @@
 % Purpose: Perform QC plot generation
 %
 % Run steps:
-%     1. Edit f_set_configs.m parameters
-%     2. Edit f_subj_configs.m parameters
+%   
 %     3. Toggle figures & data to load in run_QC.m
 %     4. Run run_QC.m
 %
@@ -16,21 +15,22 @@
 configs.path2SM = '/N/u/echumin/Quartz/img_proc_tools/ConnPipelineSM';
 
 %% -- Dataset Info -- %
-configs.path2data = '/N/project/HCPaging/iadrc2024q3/derivatives/connpipe';
-%configs.path2data = '/N/project/kbase-imaging/kbase1-bids/derivatives/connpipe';
+configs.path2data = '/N/project/ADNI/neuroimaging/derivatives/connpipe';
 
-% Leave empty to compile from path2data directories; otherwise a cell of IDs
-configs.scans = subj_reqc;
+% Leave empty to compile from path2data directories;
+% Otherwise provide path/name to a 2 column space delimited subj ses list.
+subsesFile = '/N/project/ADNI/neuroimaging/derivatives/enigmaDTIgwas/subj2run_Siemens_i.txt';
+% subsesFile=[];
 
 %% -- Links -- %%
 % Create symbolic links in new deriv directory for QC.
 LinkOut = 1;
-LinkDirName = 'connQC/mask_and_mni_run3';
+LinkDirName = 'connQC/siemens_i_brainmask';
 
 %% -- Toggle figures on/off -- %%
 % -- anat -- %
 toggle.fig1 = 1; % T1 brain masks: 1=png 2=gif
-toggle.fig2 = 1; % MNI contour 1=png 2=gif
+toggle.fig2 = 0; % MNI contour 1=png 2=gif
 toggle.fig3 = 0; % ROI masks (subcortical, ventricle, cerebellar)
 toggle.fig4 = 0; % T1 parcellations
 
@@ -76,7 +76,7 @@ configs.GS = [];
 %configs.GS = 0;
 
 %% --------------------------------------------------------------------- %%
-sub = buildscanlist(configs.scans,configs.path2data);
+sub = buildscanlist(subsesFile,configs.path2data);
 
 if LinkOut == 1
     Linkdir=[fileparts(configs.path2data) '/' LinkDirName];
@@ -330,6 +330,8 @@ function scans = buildscanlist(scans,pathderiv)
             end
             clear ses
         end
+    else
+        scans = readcell(scans);
     end
     disp('Checking format of input subject list')
     if iscell(scans) == 1
