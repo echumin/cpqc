@@ -12,20 +12,20 @@
 % =========================================================================
 
 %% -- Pipeline Supplement -- %%
-configs.path2SM = '/N/u/echumin/Quartz/img_proc_tools/ConnPipelineSM';
+configs.path2SM = '/N/project/cfn-commons/neuroimaging_utils';
 
 %% -- Dataset Info -- %
 configs.path2data = '/N/project/ADNI/neuroimaging/derivatives/connpipe';
 
 % Leave empty to compile from path2data directories;
 % Otherwise provide path/name to a 2 column space delimited subj ses list.
-subsesFile = '/N/project/ADNI/neuroimaging/derivatives/enigmaDTIgwas/subj2run_Siemens_i.txt';
-% subsesFile=[];
+% subsesFile = '/N/project/ADNI/neuroimaging/derivatives/enigmaDTIgwas/subj2run_Siemens_i.txt';
+ subsesFile=[];
 
 %% -- Links -- %%
 % Create symbolic links in new deriv directory for QC.
 LinkOut = 1;
-LinkDirName = 'connQC/siemens_i_brainmask';
+LinkDirName = 'connQC/1_brainmask';
 
 %% -- Toggle figures on/off -- %%
 % -- anat -- %
