@@ -15,7 +15,8 @@
 configs.path2SM = '/N/project/cfn-commons/neuroimaging_utils';
 
 %% -- Dataset Info -- %
-configs.path2data = '/N/project/ADNI/neuroimaging/derivatives/connpipe';
+%configs.path2data = '/N/project/ADNI/neuroimaging/derivatives/connpipe';
+configs.path2data = '/N/project/ENCOV/derivatives/connpipe';
 
 % Leave empty to compile from path2data directories;
 % Otherwise provide path/name to a 2 column space delimited subj ses list.
@@ -25,11 +26,12 @@ configs.path2data = '/N/project/ADNI/neuroimaging/derivatives/connpipe';
 %% -- Links -- %%
 % Create symbolic links in new deriv directory for QC.
 LinkOut = 1;
-LinkDirName = 'connQC/1_brainmask';
+%LinkDirName = 'connQC/1_brainmask';
+LinkDirName = 'connQC/dwi_brainmask';
 
 %% -- Toggle figures on/off -- %%
 % -- anat -- %
-toggle.fig1 = 1; % T1 brain masks: 1=png 2=gif
+toggle.fig1 = 0; % T1 brain masks: 1=png 2=gif
 toggle.fig2 = 0; % MNI contour 1=png 2=gif
 toggle.fig3 = 0; % ROI masks (subcortical, ventricle, cerebellar)
 toggle.fig4 = 0; % T1 parcellations
@@ -46,7 +48,7 @@ funcreg = 0;
     toggle.fig9 = 0; % Time-Series, ROI size, and FC
 
 % -- dwi -- %
-toggle.fig10 = 0; % DWI EDDY and DTIFIT brain masks: 1=png 2=gif
+toggle.fig10 = 1; % DWI EDDY and DTIFIT brain masks: 1=png 2=gif
 % registration
 % connectivity
 
@@ -298,12 +300,12 @@ end
 % Check DWI brain masks
 if toggle.fig10 ~= 0
     disp('Generating DWI mask figures for:')
-    for ss = 1:length(sub)
-        fprintf('-- %s -> \n', sub{ss})
+    for ss = 1:size(sub,1)
+        fprintf('-- %s %s -> \n', sub{ss,1}, sub{ss,2})
         if LinkOut==1
-            f_fig_dwi_mask(configs,sub{ss},toggle.fig10,Linkdir);
+            f_fig_dwi_mask(configs,sub(ss,:),toggle.fig10,Linkdir);
         else
-            f_fig_dwi_mask(configs,sub{ss},toggle.fig10);
+            f_fig_dwi_mask(configs,sub(ss,:),toggle.fig10);
         end
     end
 end
