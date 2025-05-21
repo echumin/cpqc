@@ -27,7 +27,7 @@ configs.path2data = '/N/project/ENCOV/derivatives/connpipe';
 % Create symbolic links in new deriv directory for QC.
 LinkOut = 1;
 %LinkDirName = 'connQC/1_brainmask';
-LinkDirName = 'connQC/dwi_brainmask';
+LinkDirName = 'connQC/dwi_brainmask_run2';
 
 %% -- Toggle figures on/off -- %%
 % -- anat -- %
