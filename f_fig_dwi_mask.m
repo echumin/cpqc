@@ -41,15 +41,19 @@ if exist(Emask,'file')
     if count > 0
         filename = [filename '_v' num2str(count+1)];
     end
+    
+    % Prepend scan ID with type
+    tempscanID=scanID;
+    tempscanID{1}=['EDDY brainmask: ' tempscanID{1}];
 
     if flag==1
         if exist('linkdir','var')
-            f_bm_overlay_png(scanID,Meanb0,Emask,3,filename,linkdir)
+            f_bm_overlay_png(tempscanID,Meanb0,Emask,3,filename,linkdir)
         else
-            f_bm_overlay_png(scanID,Meanb0,Emask,3,filename)
+            f_bm_overlay_png(tempscanID,Meanb0,Emask,3,filename)
         end
     elseif flag==2
-        f_bm_overlay_gif(scanID,Meanb0,Emask,3,filename)
+        f_bm_overlay_gif(tempscanID,Meanb0,Emask,3,filename)
     end
     fprintf('eddy mask done. - ')
 else
@@ -63,14 +67,19 @@ if exist(path2FIT,'dir')
         filename = [filename '_v' num2str(count+1)];
     end
 
+    % Prepend scan ID with type
+    clear tempscanID
+    tempscanID=scanID;
+    tempscanID{1}=['DTIFIT brainmask: ' tempscanID{1}];
+
     if flag==1
         if exist('linkdir','var')
-            f_bm_overlay_png(scanID,Meanb0,Fmask,3,filename,linkdir)
+            f_bm_overlay_png(tempscanID,Meanb0,Fmask,3,filename,linkdir)
         else
-            f_bm_overlay_png(scanID,Meanb0,Fmask,3,filename)
+            f_bm_overlay_png(tempscanID,Meanb0,Fmask,3,filename)
         end
     elseif flag==2
-        f_bm_overlay_gif(scanID,Meanb0,Fmask,3,filename)
+        f_bm_overlay_gif(tempscanID,Meanb0,Fmask,3,filename)
     end
     fprintf('dtifit mask done.\n')
 else
