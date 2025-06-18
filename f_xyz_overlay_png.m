@@ -1,4 +1,4 @@
-function f_xyz_overlay_png(subjID,ses,underlay,overlay,outname,linkdir)
+function f_xyz_overlay_png(scanID,underlay,overlay,outname,linkdir)
 
 % Load anatomical underlay
 UL=niftiread(underlay);
@@ -59,7 +59,7 @@ end
 end
 
 % Add title to figure and save as high resolution png
-sgtitle(sprintf('%s %s',subjID,ses),'Interpreter','none')    
+sgtitle(sprintf('%s %s',scanID{1},scanID{2}),'Interpreter','none')    
 print([outname '.png'],'-dpng','-r300');
 close all
 

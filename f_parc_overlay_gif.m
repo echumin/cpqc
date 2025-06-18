@@ -1,4 +1,4 @@
-function f_parc_overlay_gif(subjID,ses,underlay,parcpath,parcnames,outname,linkdir)
+function f_parc_overlay_gif(scanID,underlay,parcpath,parcnames,outname,linkdir)
 
 UL=niftiread(underlay);
 
@@ -72,7 +72,7 @@ for n=1:size(Pstack,3)
     ax2.Visible = 'off'; 
     linkaxes([ax1 ax2])
     ax1.Visible='off';
-    sgtitle([subjID ' ' ses ' Parcellations:  ' parcLabels],'Interpreter','none','Color','white')
+    sgtitle([scanID{1} ' ' scanID{2} ' Parcellations:  ' parcLabels],'Interpreter','none','Color','white')
     drawnow
     % convert plots into iamges
     frame=getframe(f);

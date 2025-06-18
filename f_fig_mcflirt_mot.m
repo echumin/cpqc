@@ -1,33 +1,31 @@
-function f_fig_mcflirt_mot(configs,subjID,linkdir)
+function f_fig_mcflirt_mot(configs,scanID,linkdir)
 
-
-if isempty(configs.ses)
-    sesList=dir(fullfile(configs.path2data,subjID,'ses*'));
-    sesList = struct2cell(sesList)';
-    sesList = sesList(:,1);
+sub_path=fullfile(configs.path2data,scanID{1},scanID{2});
+if ~exist(sub_path,'dir')
+    fprintf(2,'%s/%s - Directory does not exist! Exiting...\n',scanID{1},scanID{2})
+    return
 else
-    sesList{1}=configs.ses;
+    qcpath=fullfile(sub_path,'qc'); %output directory
+    if ~exist(qcpath,'dir')
+        mkdir(qcpath) % make output directory if it doesn't exist
+    end
 end
 
-for se=1:length(sesList)
-    ses = sesList{se};
-    sub_path=fullfile(configs.path2data,subjID,ses);
-    if ~exist(sub_path,'dir')
-        fprintf(2,'%s/%s - Directory does not exist! Exiting...\n',subjID,ses)
-        return
-    else
-        qcpath=fullfile(sub_path,'qc'); %output directory
-        if ~exist(qcpath,'dir')
-            mkdir(qcpath) % make output directory if it doesn't exist
-        end
-    end
+    path2EPI = fullfile(sub_path,'func',configs.funcTAG);
 
-    path2EPI = fullfile(sub_path,'func');
-    fprintf('---- %s -> ', ses)
     if ~exist(path2EPI,'dir')
-        fprintf(' no func directory.\n')
-    else 
-        motion=dlmread(fullfile(path2EPI,'motion.txt'));
+        fprintf([' no func/' configs.funcTAG ' directory.\n'])
+    else
+        % checking for fmri or fmri_ME motion file
+        mtfile=fullfile(path2EPI,'motion.txt');
+        if ~exist(mtfile,'file')
+            mtfile=fullfile(path2EPI,[scanID{1} '_' scanID{2} '_' configs.funcTAG '_echo-1_moco.par']);
+            if ~exist(mtfile,'file')
+                fprintf(' no motion parameter file.\n')
+                return
+            end
+        end
+        motion=readmatrix(mtfile);
         rmax = max(max(abs(motion(:,1:3))));
         h=figure('Units','inches','Position',[1 1 8 10.5]);
         h(1)=subplot(4,1,1);
@@ -85,8 +83,8 @@ for se=1:length(sesList)
             clear ul
         end
     
-        sgtitle(sprintf('%s - %s: mcFLIRT motion parameters',subjID,ses),'Interpreter','none')
-        fileout = fullfile(qcpath,[subjID '_' ses '_5-mcflirt_motion']);
+        sgtitle(sprintf('%s - %s: mcFLIRT motion parameters',scanID{1},scanID{2}),'Interpreter','none')
+        fileout = fullfile(qcpath,[scanID{1} '_' scanID{2} '_5-mcflirt_motion']);
         count=length(dir(strcat(fileout,'*')));
         if count > 0
             fileout = [fileout '_v' num2str(count+1)];
@@ -100,4 +98,3 @@ for se=1:length(sesList)
         close all
         fprintf('done.\n')
     end
-end

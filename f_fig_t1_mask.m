@@ -2,7 +2,7 @@ function f_fig_t1_mask(configs,scanID,flag,linkdir)
 
 sub_path=fullfile(configs.path2data,scanID{1},scanID{2});
 if ~exist(sub_path,'dir')
-    fprintf(2,'%s/%s - Directory does not exist! Exiting...\n',scanID,ses)
+    fprintf(2,'%s/%s - Directory does not exist! Exiting...\n',scanID{1},scanID{2})
     return
 else
     qcpath=fullfile(sub_path,'qc'); %output directory
@@ -36,4 +36,3 @@ end
   
     end
         close all
-        clear ses

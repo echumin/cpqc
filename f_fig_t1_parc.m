@@ -1,27 +1,15 @@
-function f_fig_t1_parc(configs,subjID,linkdir)
+function f_fig_t1_parc(configs,scanID,linkdir)
 
-
-if isempty(configs.ses)
-    sesList=dir(fullfile(configs.path2data,subjID,'ses*'));
-    sesList = struct2cell(sesList)';
-    sesList = sesList(:,1);
+sub_path=fullfile(configs.path2data,scanID{1},scanID{2});
+if ~exist(sub_path,'dir')
+    fprintf(2,'%s/%s - Directory does not exist! Exiting...\n',scanID{1},scanID{2})
+    return
 else
-    sesList{1}=configs.ses;
-end
-
-for se=1:length(sesList)
-    ses = sesList{se};
-    fprintf('---- %s -> ', ses)
-    sub_path=fullfile(configs.path2data,subjID,ses);
-    if ~exist(sub_path,'dir')
-        fprintf(2,'%s/%s - Directory does not exist! Exiting...\n',subjID,configs.ses)
-        return
-    else
-        qcpath=fullfile(sub_path,'qc'); %output directory
-        if ~exist(qcpath,'dir')
-            mkdir(qcpath) % make output directory if it doesn't exist
-        end
+    qcpath=fullfile(sub_path,'qc'); %output directory
+    if ~exist(qcpath,'dir')
+        mkdir(qcpath) % make output directory if it doesn't exist
     end
+end
 
     %% Define a list of parcellations
     Subj_T1=fullfile(sub_path,'anat');
@@ -48,22 +36,20 @@ for se=1:length(sesList)
     %% Generate figure
     T1f=fullfile(Subj_T1,'T1_fov_denoised.nii');
     if exist(T1f,'file')
-        filename = fullfile(qcpath,[subjID '_' ses '_4-parc_vols']);
+        filename = fullfile(qcpath,[scanID{1} '_' scanID{2} '_4-parc_vols']);
         count=length(dir(strcat(filename,'*')));
         if count > 0
             filename = [filename '_v' num2str(count+1)];
         end
 
         if exist('linkdir','var')
-            f_parc_overlay_gif(subjID,ses,T1f,Subj_T1,configs.parcs,filename,linkdir)
+            f_parc_overlay_gif(scanID,T1f,Subj_T1,configs.parcs,filename,linkdir)
         else
-            f_parc_overlay_gif(subjID,ses,T1f,Subj_T1,configs.parcs,filename)
+            f_parc_overlay_gif(scanID,T1f,Subj_T1,configs.parcs,filename)
         end
 
         fprintf('done.\n')
     else
-        fprintf(2,'%s - %s - no T1_fov_denoised found.\n',subjID,ses)
+        fprintf(2,'%s - %s - no T1_fov_denoised found.\n',scanID{1},scanID{2})
     end
     close all
-    clear ses
-end

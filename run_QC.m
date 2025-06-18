@@ -16,7 +16,9 @@ configs.path2SM = '/N/project/cfn-commons/neuroimaging_utils';
 
 %% -- Dataset Info -- %
 %configs.path2data = '/N/project/ADNI/neuroimaging/derivatives/connpipe';
-configs.path2data = '/N/project/ENCOV/derivatives/connpipe';
+%configs.path2data = '/N/project/ENCOV/derivatives/connpipe';
+%configs.path2data = '/N/project/Plawecki_DRTS/derivatives/DRTS/connpipe';
+configs.path2data = '/N/project/alcnet/FHAN/derivatives/connpipe';
 
 % Leave empty to compile from path2data directories;
 % Otherwise provide path/name to a 2 column space delimited subj ses list.
@@ -26,8 +28,8 @@ configs.path2data = '/N/project/ENCOV/derivatives/connpipe';
 %% -- Links -- %%
 % Create symbolic links in new deriv directory for QC.
 LinkOut = 1;
-%LinkDirName = 'connQC/1_brainmask';
-LinkDirName = 'connQC/dwi_brainmask_run2';
+LinkDirName = 'connQC/2_masks_parcs';
+%LinkDirName = 'connQC/dwi_brainmask_run2';
 
 %% -- Toggle figures on/off -- %%
 % -- anat -- %
@@ -41,14 +43,16 @@ toggle.fig5 = 0; % Subject motion
 toggle.fig6 = 0; % EPI brain masks: 1=png 2=gif
 toggle.fig7 = 0; % EPI parcellations
 
+%% ---- THIS BLOCK HAS NOT BEEN UPDATED AND WILL NOT RUN ----%%
 % -- nuissance regression func -- "
 % funcreg is a global flag that needs to be on for subcequent flags to prevent unnecessary overhead.
 funcreg = 0; 
     toggle.fig8 = 0; % Regression plots
     toggle.fig9 = 0; % Time-Series, ROI size, and FC
+%% ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- %%
 
 % -- dwi -- %
-toggle.fig10 = 1; % DWI EDDY and DTIFIT brain masks: 1=png 2=gif
+toggle.fig10 = 0; % DWI EDDY and DTIFIT brain masks: 1=png 2=gif
 % registration
 % connectivity
 
@@ -61,6 +65,8 @@ configs.parcs = {};
 % or
 %configs.parcs = {'DKT','schaefer200y7','Tian2','FSLsubcort','buckner-crblm','suit-crblm'};
 %configs.parcs = {'DKT','FSLsubcort','Tian2'};
+
+configs.funcTAG = {'task-restGust_run-01'};
 
 configs.nuisanceMOT = {};
 % or
@@ -117,18 +123,18 @@ end
 % T1 subcortical roi masks
 if toggle.fig3 == 1
     disp('Generating T1 ROI figures for:')
-    for ss = 1:length(sub)
-        fprintf('-- %s -> \n', sub{ss})
+    for ss = 1:size(sub,1)
+        fprintf('-- %s %s -> \n', sub{ss,1}, sub{ss,2})
         if LinkOut==1
             fprintf('CSF and Cerebellum:\n')
-            f_fig_t1_roi(configs,sub{ss},Linkdir)
+            f_fig_t1_roi(configs,sub(ss,:),Linkdir)
             fprintf('Subcortical:\n')
-            f_fig_t1_subc(configs,sub{ss},Linkdir)
+            f_fig_t1_subc(configs,sub(ss,:),Linkdir)
         else
             fprintf('CSF and Cerebellum:\n')
-            f_fig_t1_roi(configs,sub{ss})
+            f_fig_t1_roi(configs,sub(ss,:))
             fprintf('Subcortical:\n')
-            f_fig_t1_subc(configs,sub{ss})
+            f_fig_t1_subc(configs,sub(ss,:))
         end
     end
 end
@@ -136,12 +142,12 @@ end
 % T1 parcellations
 if toggle.fig4 == 1
     disp('Generating T1_GM_parc figures for:')
-    for ss = 1:length(sub)
-        fprintf('-- %s -> \n', sub{ss})
+    for ss = 1:size(sub,1)
+        fprintf('-- %s %s -> \n', sub{ss,1}, sub{ss,2})
         if LinkOut==1
-            f_fig_t1_parc(configs,sub{ss},Linkdir);
+            f_fig_t1_parc(configs,sub(ss,:),Linkdir);
         else
-            f_fig_t1_parc(configs,sub{ss});
+            f_fig_t1_parc(configs,sub(ss,:));
         end
     end
 end
@@ -150,12 +156,12 @@ end
 % Subject motion
 if toggle.fig5 == 1
     disp('Generating MCFLIRT MOTION figures for:')
-    for ss = 1:length(sub)
-        fprintf('-- %s -> \n', sub{ss})
+    for ss = 1:size(sub,1)
+        fprintf('-- %s %s -> \n', sub{ss,1}, sub{ss,2})
         if LinkOut==1
-            f_fig_mcflirt_mot(configs,sub{ss},Linkdir);
+            f_fig_mcflirt_mot(configs,sub(ss,:),Linkdir);
         else
-            f_fig_mcflirt_mot(configs,sub{ss});
+            f_fig_mcflirt_mot(configs,sub(ss,:));
         end
     end
 end
@@ -163,12 +169,12 @@ end
 % EPI brain masks
 if toggle.fig6 ~= 0
     disp('Generating EPI MASK figures for:')
-    for ss = 1:length(sub)
-        fprintf('-- %s -> \n', sub{ss})
+    for ss = 1:size(sub,1)
+        fprintf('-- %s %s -> \n', sub{ss,1}, sub{ss,2})
         if LinkOut==1
-            f_fig_epi_mask(configs,sub{ss},toggle.fig6,Linkdir);
+            f_fig_epi_mask(configs,sub(ss,:),toggle.fig6,Linkdir);
         else
-            f_fig_epi_mask(configs,sub{ss},toggle.fig6);
+            f_fig_epi_mask(configs,sub(ss,:),toggle.fig6);
         end
     end
 end
@@ -176,12 +182,12 @@ end
 % EPI parcellations
 if toggle.fig7 == 1
     disp('Generating EPI PARC figures for:')
-    for ss = 1:length(sub)
-        fprintf('-- %s -> \n', sub{ss})
+    for ss = 1:size(sub,1)
+        printf('-- %s %s -> \n', sub{ss,1}, sub{ss,2})
         if LinkOut==1
-            f_fig_epi_parc(configs,sub{ss},Linkdir);
+            f_fig_epi_parc(configs,sub(ss,:),Linkdir);
         else
-            f_fig_epi_parc(configs,sub{ss});
+            f_fig_epi_parc(configs,sub(ss,:));
         end
     end
 end

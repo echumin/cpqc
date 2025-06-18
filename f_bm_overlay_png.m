@@ -1,4 +1,3 @@
-
 function f_bm_overlay_png(scanID,underlay,overlay,dim,outname,linkdir)
 
 % Load anatomical underlay
