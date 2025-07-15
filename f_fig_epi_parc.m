@@ -5,7 +5,7 @@ if ~exist(sub_path,'dir')
     fprintf(2,'%s/%s - Directory does not exist! Exiting...\n',scanID{1},scanID{2})
     return
 else
-    qcpath=fullfile(sub_path,'qc'); %output directory
+    qcpath=fullfile(sub_path,'qc',configs.funcTAG); %output directory
     if ~exist(qcpath,'dir')
         mkdir(qcpath) % make output directory if it doesn't exist
     end
@@ -57,9 +57,9 @@ end
             end
     
             if exist('linkdir','var')
-                f_parc_overlay_gif(scanID,MeanVol,path2EPI,configs.parcs,filename,linkdir)
+                f_parc_overlay_gif(scanID,MeanVol,parcpath,configs.parcs,filename,linkdir)
             else
-                f_parc_overlay_gif(scanID,MeanVol,path2EPI,configs.parcs,filename)
+                f_parc_overlay_gif(scanID,MeanVol,parcpath,configs.parcs,filename)
             end
    
             fprintf('done.\n')

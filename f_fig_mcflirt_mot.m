@@ -5,7 +5,7 @@ if ~exist(sub_path,'dir')
     fprintf(2,'%s/%s - Directory does not exist! Exiting...\n',scanID{1},scanID{2})
     return
 else
-    qcpath=fullfile(sub_path,'qc'); %output directory
+    qcpath=fullfile(sub_path,'qc',configs.funcTAG); %output directory
     if ~exist(qcpath,'dir')
         mkdir(qcpath) % make output directory if it doesn't exist
     end
@@ -25,7 +25,7 @@ end
                 return
             end
         end
-        motion=readmatrix(mtfile);
+        motion=readmatrix(mtfile,'FileType','text');
         rmax = max(max(abs(motion(:,1:3))));
         h=figure('Units','inches','Position',[1 1 8 10.5]);
         h(1)=subplot(4,1,1);

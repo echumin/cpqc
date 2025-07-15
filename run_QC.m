@@ -66,7 +66,7 @@ configs.parcs = {};
 %configs.parcs = {'DKT','schaefer200y7','Tian2','FSLsubcort','buckner-crblm','suit-crblm'};
 %configs.parcs = {'DKT','FSLsubcort','Tian2'};
 
-configs.funcTAG = {'task-restGust_run-01'};
+configs.funcTAG = {'task-restGust_run-01'}; % fix the scripts so that mult tags in cell can run
 
 configs.nuisanceMOT = {};
 % or
@@ -183,7 +183,7 @@ end
 if toggle.fig7 == 1
     disp('Generating EPI PARC figures for:')
     for ss = 1:size(sub,1)
-        printf('-- %s %s -> \n', sub{ss,1}, sub{ss,2})
+        fprintf('-- %s %s -> \n', sub{ss,1}, sub{ss,2})
         if LinkOut==1
             f_fig_epi_parc(configs,sub(ss,:),Linkdir);
         else
