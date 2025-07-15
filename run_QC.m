@@ -11,6 +11,8 @@
 % https://link/to/documentation.com
 % =========================================================================
 
+addpath('/N/project/cfn-commons/ConnPipe/cpqc')
+
 %% -- Pipeline Supplement -- %%
 configs.path2SM = '/N/project/cfn-commons/neuroimaging_utils';
 
