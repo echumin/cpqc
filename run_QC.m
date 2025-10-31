@@ -11,16 +11,13 @@
 % https://link/to/documentation.com
 % =========================================================================
 
-addpath('/N/project/cfn-commons/ConnPipe/cpqc')
+addpath('/N/u/echumin/Quartz/img_proc_tools/cpqc')
 
 %% -- Pipeline Supplement -- %%
 configs.path2SM = '/N/project/cfn-commons/neuroimaging_utils';
 
 %% -- Dataset Info -- %
-%configs.path2data = '/N/project/ADNI/neuroimaging/derivatives/connpipe';
-%configs.path2data = '/N/project/ENCOV/derivatives/connpipe';
-%configs.path2data = '/N/project/Plawecki_DRTS/derivatives/DRTS/connpipe';
-configs.path2data = '/N/project/alcnet/FHAN/derivatives/connpipe';
+configs.path2data = '/N/project/KBASE/neuroimaging/kbase2/derivatives/connpipe';
 
 % Leave empty to compile from path2data directories;
 % Otherwise provide path/name to a 2 column space delimited subj ses list.
@@ -30,8 +27,7 @@ configs.path2data = '/N/project/alcnet/FHAN/derivatives/connpipe';
 %% -- Links -- %%
 % Create symbolic links in new deriv directory for QC.
 LinkOut = 1;
-LinkDirName = 'connQC/2_masks_parcs';
-%LinkDirName = 'connQC/dwi_brainmask_run2';
+LinkDirName = 'connQC-new';
 
 %% -- Toggle figures on/off -- %%
 % -- anat -- %
@@ -68,7 +64,7 @@ configs.parcs = {};
 %configs.parcs = {'DKT','schaefer200y7','Tian2','FSLsubcort','buckner-crblm','suit-crblm'};
 %configs.parcs = {'DKT','FSLsubcort','Tian2'};
 
-configs.funcTAG = {'task-restGust_run-01'}; % fix the scripts so that mult tags in cell can run
+configs.funcTAG = {'task-rest'}; % fix the scripts so that mult tags in cell can run
 
 configs.nuisanceMOT = {};
 % or
@@ -101,10 +97,22 @@ if toggle.fig1 ~= 0
     disp('Generating T1_brain_mask figures for:')
     for ss = 1:size(sub,1)
         fprintf('-- %s %s -> \n', sub{ss,1}, sub{ss,2})
-        if LinkOut==1
-            f_fig_t1_mask(configs,sub(ss,:),toggle.fig1,Linkdir); %DONE - NEEDS COMMENTING
+        sub_path=fullfile(configs.path2data,sub{ss,1},sub{ss,2});
+        if ~exist(sub_path,'dir')
+            fprintf(2,' Directory does not exist!\n')
+            fig1_error(ss,1)=1;
         else
-            f_fig_t1_mask(configs,sub(ss,:),toggle.fig1); %DONE - NEEDS COMMENTING
+            fig1_error(ss,1)=0;
+            qcpath=fullfile(sub_path,'qc'); %output directory
+            if ~exist(qcpath,'dir')
+                mkdir(qcpath) % make output directory if it doesn't exist
+            end
+            
+            if LinkOut==1
+                f_fig_t1_mask(configs,sub(ss,:),toggle.fig1,Linkdir); %DONE - NEEDS COMMENTING
+            else
+                f_fig_t1_mask(configs,sub(ss,:),toggle.fig1); %DONE - NEEDS COMMENTING
+            end
         end
     end
 end
@@ -114,10 +122,22 @@ if toggle.fig2 ~= 0
     disp('Generating MNI CONTOUR figures for:')
     for ss = 1:size(sub,1)
         fprintf('-- %s %s -> \n', sub{ss,1}, sub{ss,2})
-        if LinkOut==1
-            f_fig_mni_contour(configs,sub(ss,:),toggle.fig2,Linkdir);
+        sub_path=fullfile(configs.path2data,sub{ss,1},sub{ss,2});
+        if ~exist(sub_path,'dir')
+            fprintf(2,' Directory does not exist!\n')
+            fig2_error(ss,1)=1;
         else
-            f_fig_mni_contour(configs,sub(ss,:),toggle.fig2);
+            fig2_error(ss,1)=0;
+            qcpath=fullfile(sub_path,'qc'); %output directory
+            if ~exist(qcpath,'dir')
+                mkdir(qcpath) % make output directory if it doesn't exist
+            end
+
+            if LinkOut==1
+                f_fig_mni_contour(configs,sub(ss,:),toggle.fig2,Linkdir);
+            else
+                f_fig_mni_contour(configs,sub(ss,:),toggle.fig2);
+            end
         end
     end   
 end
@@ -127,16 +147,28 @@ if toggle.fig3 == 1
     disp('Generating T1 ROI figures for:')
     for ss = 1:size(sub,1)
         fprintf('-- %s %s -> \n', sub{ss,1}, sub{ss,2})
-        if LinkOut==1
-            fprintf('CSF and Cerebellum:\n')
-            f_fig_t1_roi(configs,sub(ss,:),Linkdir)
-            fprintf('Subcortical:\n')
-            f_fig_t1_subc(configs,sub(ss,:),Linkdir)
+        sub_path=fullfile(configs.path2data,scanID{1},scanID{2});
+        if ~exist(sub_path,'dir')
+            fprintf(2,' Directory does not exist!\n')
+            figs3_error(ss,1)=1;
         else
-            fprintf('CSF and Cerebellum:\n')
-            f_fig_t1_roi(configs,sub(ss,:))
-            fprintf('Subcortical:\n')
-            f_fig_t1_subc(configs,sub(ss,:))
+            figs3_error(ss,1)=0;
+            qcpath=fullfile(sub_path,'qc'); %output directory
+            if ~exist(qcpath,'dir')
+                mkdir(qcpath) % make output directory if it doesn't exist
+            end
+
+            if LinkOut==1
+                fprintf('CSF and Cerebellum:\n')
+                f_fig_t1_roi(configs,sub(ss,:),Linkdir)
+                fprintf('Subcortical:\n')
+                f_fig_t1_subc(configs,sub(ss,:),Linkdir)
+            else
+                fprintf('CSF and Cerebellum:\n')
+                f_fig_t1_roi(configs,sub(ss,:))
+                fprintf('Subcortical:\n')
+                f_fig_t1_subc(configs,sub(ss,:))
+            end
         end
     end
 end
@@ -146,10 +178,22 @@ if toggle.fig4 == 1
     disp('Generating T1_GM_parc figures for:')
     for ss = 1:size(sub,1)
         fprintf('-- %s %s -> \n', sub{ss,1}, sub{ss,2})
-        if LinkOut==1
-            f_fig_t1_parc(configs,sub(ss,:),Linkdir);
+        sub_path=fullfile(configs.path2data,scanID{1},scanID{2});
+        if ~exist(sub_path,'dir')
+            fprintf(2,' Directory does not exist!\n')
+            fig4_error(ss,1)=1;
         else
-            f_fig_t1_parc(configs,sub(ss,:));
+            fig4_error(ss,1)=0;
+            qcpath=fullfile(sub_path,'qc'); %output directory
+            if ~exist(qcpath,'dir')
+                mkdir(qcpath) % make output directory if it doesn't exist
+            end
+
+            if LinkOut==1
+                f_fig_t1_parc(configs,sub(ss,:),Linkdir);
+            else
+                f_fig_t1_parc(configs,sub(ss,:));
+            end
         end
     end
 end
@@ -160,10 +204,22 @@ if toggle.fig5 == 1
     disp('Generating MCFLIRT MOTION figures for:')
     for ss = 1:size(sub,1)
         fprintf('-- %s %s -> \n', sub{ss,1}, sub{ss,2})
-        if LinkOut==1
-            f_fig_mcflirt_mot(configs,sub(ss,:),Linkdir);
+        sub_path=fullfile(configs.path2data,scanID{1},scanID{2});
+        if ~exist(sub_path,'dir')
+            fprintf(2,' Directory does not exist!\n')
+            fig5_error(ss,1)=1;
         else
-            f_fig_mcflirt_mot(configs,sub(ss,:));
+            fig5_error(ss,1)=0;
+            qcpath=fullfile(sub_path,'qc'); %output directory
+            if ~exist(qcpath,'dir')
+                mkdir(qcpath) % make output directory if it doesn't exist
+            end
+
+            if LinkOut==1
+                f_fig_mcflirt_mot(configs,sub(ss,:),Linkdir);
+            else
+                f_fig_mcflirt_mot(configs,sub(ss,:));
+            end
         end
     end
 end
@@ -173,10 +229,22 @@ if toggle.fig6 ~= 0
     disp('Generating EPI MASK figures for:')
     for ss = 1:size(sub,1)
         fprintf('-- %s %s -> \n', sub{ss,1}, sub{ss,2})
-        if LinkOut==1
-            f_fig_epi_mask(configs,sub(ss,:),toggle.fig6,Linkdir);
+        sub_path=fullfile(configs.path2data,scanID{1},scanID{2});
+        if ~exist(sub_path,'dir')
+            fprintf(2,' Directory does not exist!\n')
+            fig6_error(ss,1)=1;
         else
-            f_fig_epi_mask(configs,sub(ss,:),toggle.fig6);
+            fig6_error(ss,1)=0;
+            qcpath=fullfile(sub_path,'qc'); %output directory
+            if ~exist(qcpath,'dir')
+                mkdir(qcpath) % make output directory if it doesn't exist
+            end
+
+            if LinkOut==1
+                f_fig_epi_mask(configs,sub(ss,:),toggle.fig6,Linkdir);
+            else
+                f_fig_epi_mask(configs,sub(ss,:),toggle.fig6);
+            end
         end
     end
 end
@@ -186,10 +254,22 @@ if toggle.fig7 == 1
     disp('Generating EPI PARC figures for:')
     for ss = 1:size(sub,1)
         fprintf('-- %s %s -> \n', sub{ss,1}, sub{ss,2})
-        if LinkOut==1
-            f_fig_epi_parc(configs,sub(ss,:),Linkdir);
+        sub_path=fullfile(configs.path2data,scanID{1},scanID{2});
+        if ~exist(sub_path,'dir')
+            fprintf(2,' Directory does not exist!\n')
+            fig7_error(ss,1)=1;
         else
-            f_fig_epi_parc(configs,sub(ss,:));
+            fig7_error(ss,1)=0;
+            qcpath=fullfile(sub_path,'qc'); %output directory
+            if ~exist(qcpath,'dir')
+                mkdir(qcpath) % make output directory if it doesn't exist
+            end
+
+            if LinkOut==1
+                f_fig_epi_parc(configs,sub(ss,:),Linkdir);
+            else
+                f_fig_epi_parc(configs,sub(ss,:));
+            end
         end
     end
 end
