@@ -17,7 +17,7 @@ addpath('/N/u/echumin/Quartz/img_proc_tools/cpqc')
 configs.path2SM = '/N/project/cfn-commons/neuroimaging_utils';
 
 %% -- Dataset Info -- %
-configs.path2data = '/N/project/KBASE/neuroimaging/kbase2/derivatives/connpipe';
+configs.path2data = '/N/project/IADRC/derivatives/IADRCskyra/connpipe';
 
 % Leave empty to compile from path2data directories;
 % Otherwise provide path/name to a 2 column space delimited subj ses list.
@@ -27,14 +27,14 @@ configs.path2data = '/N/project/KBASE/neuroimaging/kbase2/derivatives/connpipe';
 %% -- Links -- %%
 % Create symbolic links in new deriv directory for QC.
 LinkOut = 1;
-LinkDirName = 'connQC-new';
+LinkDirName = 'connQC';
 
 %% -- Toggle figures on/off -- %%
 % -- anat -- %
 toggle.fig1 = 0; % T1 brain masks: 1=png 2=gif
 toggle.fig2 = 0; % MNI contour 1=png 2=gif
 toggle.fig3 = 0; % ROI masks (subcortical, ventricle, cerebellar)
-toggle.fig4 = 0; % T1 parcellations
+toggle.fig4 = 1; % T1 parcellations
 
 % -- func -- %
 toggle.fig5 = 0; % Subject motion
@@ -147,7 +147,7 @@ if toggle.fig3 == 1
     disp('Generating T1 ROI figures for:')
     for ss = 1:size(sub,1)
         fprintf('-- %s %s -> \n', sub{ss,1}, sub{ss,2})
-        sub_path=fullfile(configs.path2data,scanID{1},scanID{2});
+        sub_path=fullfile(configs.path2data,sub{ss,1},sub{ss,2});
         if ~exist(sub_path,'dir')
             fprintf(2,' Directory does not exist!\n')
             figs3_error(ss,1)=1;
@@ -178,7 +178,7 @@ if toggle.fig4 == 1
     disp('Generating T1_GM_parc figures for:')
     for ss = 1:size(sub,1)
         fprintf('-- %s %s -> \n', sub{ss,1}, sub{ss,2})
-        sub_path=fullfile(configs.path2data,scanID{1},scanID{2});
+        sub_path=fullfile(configs.path2data,sub{ss,1},sub{ss,2});
         if ~exist(sub_path,'dir')
             fprintf(2,' Directory does not exist!\n')
             fig4_error(ss,1)=1;
@@ -204,7 +204,7 @@ if toggle.fig5 == 1
     disp('Generating MCFLIRT MOTION figures for:')
     for ss = 1:size(sub,1)
         fprintf('-- %s %s -> \n', sub{ss,1}, sub{ss,2})
-        sub_path=fullfile(configs.path2data,scanID{1},scanID{2});
+        sub_path=fullfile(configs.path2data,sub{ss,1},sub{ss,2});
         if ~exist(sub_path,'dir')
             fprintf(2,' Directory does not exist!\n')
             fig5_error(ss,1)=1;
@@ -229,7 +229,7 @@ if toggle.fig6 ~= 0
     disp('Generating EPI MASK figures for:')
     for ss = 1:size(sub,1)
         fprintf('-- %s %s -> \n', sub{ss,1}, sub{ss,2})
-        sub_path=fullfile(configs.path2data,scanID{1},scanID{2});
+        sub_path=fullfile(configs.path2data,sub{ss,1},sub{ss,2});
         if ~exist(sub_path,'dir')
             fprintf(2,' Directory does not exist!\n')
             fig6_error(ss,1)=1;
@@ -254,7 +254,7 @@ if toggle.fig7 == 1
     disp('Generating EPI PARC figures for:')
     for ss = 1:size(sub,1)
         fprintf('-- %s %s -> \n', sub{ss,1}, sub{ss,2})
-        sub_path=fullfile(configs.path2data,scanID{1},scanID{2});
+        sub_path=fullfile(configs.path2data,sub{ss,1},sub{ss,2});
         if ~exist(sub_path,'dir')
             fprintf(2,' Directory does not exist!\n')
             fig7_error(ss,1)=1;
