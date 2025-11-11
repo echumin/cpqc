@@ -1,7 +1,7 @@
 function f_fig_epi_mask(configs,scanID,flag,linkdir)
 
 sub_path=fullfile(configs.path2data,scanID{1},scanID{2});
-qcpath=fullfile(sub_path,'qc',configs.funcTAG); %output directory
+qcpath=fullfile(sub_path,'qc',configs.funcTAG{1}); %output directory
 
 %%
 fileout = fullfile(qcpath,[scanID{1} '_' scanID{2} '_6-epi_rGMmask']);
@@ -10,18 +10,18 @@ if count > 0
     fileout = [fileout '_v' num2str(count+1)];
 end
 
-path2EPI = fullfile(sub_path,'func',configs.funcTAG);
+path2EPI = fullfile(sub_path,'func',configs.funcTAG{1});
 
 if ~exist(path2EPI,'dir')
-    nofig(scanID,{['congigs.funcTAG: ' configs.funcTAG],['Does not exist: func/' configs.funcTAG]},filename,linkdir)
-    fprintf([' no func/' configs.funcTAG ' directory.\n'])
+    nofig(scanID,{['congigs.funcTAG{1}: ' configs.funcTAG{1}],['Does not exist: func/' configs.funcTAG{1}]},fileout,linkdir)
+    fprintf([' no func/' configs.funcTAG{1} ' directory.\n'])
 else
     % Set filenames/read in data
     MeanVol=fullfile(path2EPI,'2_epi_meanvol.nii.gz');
     if ~exist(MeanVol,'file')
-        MeanVol=fullfile(path2EPI,[scanID{1} '_' scanID{2} '_' configs.funcTAG '_echo-1_moco_brain.nii.gz']);
+        MeanVol=fullfile(path2EPI,[scanID{1} '_' scanID{2} '_' configs.funcTAG{1} '_echo-1_moco_brain.nii.gz']);
         if ~exist(MeanVol,'file')
-            nofig(scanID,{['congigs.funcTAG: ' configs.funcTAG],'Not Found: epi_meanvol'},filename,linkdir)
+            nofig(scanID,{['congigs.funcTAG{1}: ' configs.funcTAG{1}],'Not Found: epi_meanvol'},fileout,linkdir)
             fprintf(' no *_echo-1_moco_brain.nii.gz file.\n')
             return
         end
@@ -31,7 +31,7 @@ else
     if ~exist(mask,'file')
         mask=fullfile(path2EPI,'t1parc_registration','rT1_GM_mask.nii.gz');
         if ~exist(mask,'file')
-            nofig(scanID,{['congigs.funcTAG: ' configs.funcTAG],'Not Found: rT1_GM_mask'},filename,linkdir)
+            nofig(scanID,{['congigs.funcTAG{1}: ' configs.funcTAG{1}],'Not Found: rT1_GM_mask'},fileout,linkdir)
             fprintf(' no t1parc_registration/rT1_GM_mask.nii.gz file.\n')
             return
         end

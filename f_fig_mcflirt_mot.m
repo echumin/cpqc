@@ -1,7 +1,7 @@
 function f_fig_mcflirt_mot(configs,scanID,linkdir)
 
 sub_path=fullfile(configs.path2data,scanID{1},scanID{2});
-qcpath=fullfile(sub_path,'qc',configs.funcTAG); %output directory
+qcpath=fullfile(sub_path,'qc',configs.funcTAG{1}); %output directory
 
 %%
 fileout = fullfile(qcpath,[scanID{1} '_' scanID{2} '_5-mcflirt_motion']);
@@ -10,18 +10,18 @@ if count > 0
     fileout = [fileout '_v' num2str(count+1)];
 end
 
-path2EPI = fullfile(sub_path,'func',configs.funcTAG);
+path2EPI = fullfile(sub_path,'func',configs.funcTAG{1});
 
 if ~exist(path2EPI,'dir')
-    nofig(scanID,{['congigs.funcTAG: ' configs.funcTAG],['Does not exist: func/' configs.funcTAG]},filename,linkdir)
-    fprintf([' no func/' configs.funcTAG ' directory.\n'])
+    nofig(scanID,{['congigs.funcTAG{1}: ' configs.funcTAG{1}],['Does not exist: func/' configs.funcTAG{1}]},filename,linkdir)
+    fprintf([' no func/' configs.funcTAG{1} ' directory.\n'])
 else
     % checking for fmri or fmri_ME motion file
     mtfile=fullfile(path2EPI,'motion.txt');
     if ~exist(mtfile,'file')
-        mtfile=fullfile(path2EPI,[scanID{1} '_' scanID{2} '_' configs.funcTAG '_echo-1_moco.par']);
+        mtfile=fullfile(path2EPI,[scanID{1} '_' scanID{2} '_' configs.funcTAG{1} '_echo-1_moco.par']);
         if ~exist(mtfile,'file')
-            nofig(scanID,{['congigs.funcTAG: ' configs.funcTAG],'Not Found: motion parameter .par file'},filename,linkdir)
+            nofig(scanID,{['congigs.funcTAG{1}: ' configs.funcTAG{1}],'Not Found: motion parameter .par file'},filename,linkdir)
             fprintf(' no motion parameter file.\n')
             return
         end

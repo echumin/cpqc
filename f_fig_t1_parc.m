@@ -8,7 +8,7 @@ Subj_T1=fullfile(sub_path,'anat');
 
 if isempty(configs.parcs)
     % get a list of parcellation files 
-    parcs=dir(fullfile(Subj_T1,'T1_GM_parc*'));
+    parcs=dir(fullfile(Subj_T1,'T1_parc*'));
     % remove the dilated versions
     idx=double.empty;
     for j=1:length(parcs)
@@ -23,12 +23,18 @@ if isempty(configs.parcs)
         configs.parcs{p}=pt{1};
     clear pt
     end
+    
 end
 
 filename = fullfile(qcpath,[scanID{1} '_' scanID{2} '_4-parc_vols']);
 count=length(dir(strcat(filename,'*')));
 if count > 0
     filename = [filename '_v' num2str(count+1)];
+end
+
+if isempty(configs.parcs)
+    nofig(scanID,'No T1_*parc* volumes found',filename,linkdir)
+    fprintf(2,'%s - %s - no T1_*parc* volumes found.\n',scanID{1},scanID{2})
 end
 
 %% Generate figure

@@ -35,10 +35,19 @@ maxIdx=double.empty;
 clear Pvols
 for p=1:nP
     pFile = dir(fullfile(parcpath,['*T1_GM_parc_' parcnames{p} '.nii.gz']));
-    T1p=niftiread(fullfile(parcpath,pFile.name)); % load parcellation
-    Pvols{p}=T1p;
-    maxIdx(end+1)=max(unique(T1p)); % find max index value in parcellation
-    clear T1p
+    if height(pFile)==0
+        pFile = dir(fullfile(parcpath,['*T1_parc_' parcnames{p} '.nii.gz']));
+    end
+    if height(pFile)==1
+        T1p=niftiread(fullfile(parcpath,pFile.name)); % load parcellation
+        Pvols{p}=T1p;
+        maxIdx(end+1)=max(unique(T1p)); % find max index value in parcellation
+        clear T1p
+    else
+        fprintf(2,['multiple conditions fit ' parcnames{p}])
+        disp(pFile.name)
+        disp(pFile.name)
+    end
 end
 for p=1:nP     
     % get slice stacks
@@ -53,7 +62,7 @@ for p=1:nP
     % concatenate
     Pstack = cat(2,Pstack,Pvols{2,p});
 end
-f=figure('Units','inches','Position',[1 1 3*nP 6],'Color','k','Visible','off'); 
+f=figure('Units','inches','Position',[1 1 3.2*nP 6],'Color','k','Visible','off'); 
 c2map=gray(128);
 c3map=lines(maxIdx);
            
@@ -72,7 +81,7 @@ for n=1:size(Pstack,3)
     ax2.Visible = 'off'; 
     linkaxes([ax1 ax2])
     ax1.Visible='off';
-    sgtitle([scanID{1} ' ' scanID{2} ' Parcellations:  ' parcLabels],'Interpreter','none','Color','white')
+    sgtitle({[scanID{1} ' ' scanID{2} ' Parcellations:'], parcLabels},'Interpreter','none','Color','white')
     drawnow
     % convert plots into iamges
     frame=getframe(f);
@@ -80,9 +89,9 @@ for n=1:size(Pstack,3)
     [imind,cm]=rgb2ind(im,256);
     % write the gif file
     if n==1
-       imwrite(imind,cm,[outname '.gif'],'gif','DelayTime',.4,'Loopcount',inf);
+       imwrite(imind,cm,[outname '.gif'],'gif','DelayTime',.6,'Loopcount',inf);
     else
-       imwrite(imind,cm,[outname '.gif'],'gif','DelayTime',.4,'WriteMode','append')
+       imwrite(imind,cm,[outname '.gif'],'gif','DelayTime',.6,'WriteMode','append')
     end
 end
 close all

@@ -34,12 +34,12 @@ LinkDirName = 'connQC';
 toggle.fig1 = 0; % T1 brain masks: 1=png 2=gif
 toggle.fig2 = 0; % MNI contour 1=png 2=gif
 toggle.fig3 = 0; % ROI masks (subcortical, ventricle, cerebellar)
-toggle.fig4 = 1; % T1 parcellations
+toggle.fig4 = 0; % T1 parcellations
 
 % -- func -- %
 toggle.fig5 = 0; % Subject motion
 toggle.fig6 = 0; % EPI brain masks: 1=png 2=gif
-toggle.fig7 = 0; % EPI parcellations
+toggle.fig7 = 1; % EPI parcellations
 
 %% ---- THIS BLOCK HAS NOT BEEN UPDATED AND WILL NOT RUN ----%%
 % -- nuissance regression func -- "
@@ -210,7 +210,7 @@ if toggle.fig5 == 1
             fig5_error(ss,1)=1;
         else
             fig5_error(ss,1)=0;
-            qcpath=fullfile(sub_path,'qc'); %output directory
+            qcpath=fullfile(sub_path,'qc',configs.funcTAG{1}); %output directory
             if ~exist(qcpath,'dir')
                 mkdir(qcpath) % make output directory if it doesn't exist
             end
@@ -235,7 +235,7 @@ if toggle.fig6 ~= 0
             fig6_error(ss,1)=1;
         else
             fig6_error(ss,1)=0;
-            qcpath=fullfile(sub_path,'qc'); %output directory
+            qcpath=fullfile(sub_path,'qc',configs.funcTAG{1}); %output directory
             if ~exist(qcpath,'dir')
                 mkdir(qcpath) % make output directory if it doesn't exist
             end
@@ -260,7 +260,7 @@ if toggle.fig7 == 1
             fig7_error(ss,1)=1;
         else
             fig7_error(ss,1)=0;
-            qcpath=fullfile(sub_path,'qc'); %output directory
+            qcpath=fullfile(sub_path,'qc',configs.funcTAG{1}); %output directory
             if ~exist(qcpath,'dir')
                 mkdir(qcpath) % make output directory if it doesn't exist
             end
