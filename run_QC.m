@@ -39,7 +39,7 @@ toggle.fig4 = 0; % T1 parcellations
 % -- func -- %
 toggle.fig5 = 0; % Subject motion
 toggle.fig6 = 0; % EPI brain masks: 1=png 2=gif
-toggle.fig7 = 1; % EPI parcellations
+toggle.fig7 = 0; % EPI parcellations
 
 %% ---- THIS BLOCK HAS NOT BEEN UPDATED AND WILL NOT RUN ----%%
 % -- nuissance regression func -- "

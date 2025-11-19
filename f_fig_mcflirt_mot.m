@@ -28,7 +28,7 @@ else
     end
     motion=readmatrix(mtfile,'FileType','text');
     rmax = max(max(abs(motion(:,1:3))));
-    h=figure('Units','inches','Position',[1 1 8 10.5]);
+    h=figure('Units','inches','Position',[1 1 8 10.5],'Visible','off');
     h(1)=subplot(4,1,1);
     plot(zeros(length(motion),1),'k--')
     hold all
@@ -85,7 +85,7 @@ else
     end
 
     sgtitle(sprintf('%s - %s: mcFLIRT motion parameters',scanID{1},scanID{2}),'Interpreter','none')
-    print([fileout '.png'],'-dpng','-r600')
+    print([fileout '.png'],'-dpng','-r300')
 
     if exist('linkdir','var')
         system(['ln -sf ' fileout '.png ' linkdir '/']);

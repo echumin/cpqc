@@ -1,6 +1,6 @@
 function nofig(scanID,msg,outname,linkdir)
 
-f=figure('units','inches','Position',[1 1 5 5]);
+f=figure('units','inches','Position',[1 1 5 5],'Visible','off');
 text(.1,.7,[scanID{1},' ',scanID{2}],'Interpreter','none')
 text(.1,.6,msg,'Interpreter','none')
 axis off

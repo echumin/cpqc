@@ -43,7 +43,7 @@ if exist(T1mnifile,'file')
             end
 
             % initialize figure
-            figure('Units','inches','Position',[1 1 15 3],'Color','k'); 
+            figure('Units','inches','Position',[1 1 15 3],'Color','k','Visible','off'); 
 
             % generate a grayscale colormap with red as the highest intensity color
             cmap=colormap(gray(128));
@@ -102,7 +102,7 @@ if exist(T1mnifile,'file')
 
         case 2
             % open figure
-            h=figure('Units','inches','Position',[1 1 10 10],'Color','k');     
+            h=figure('Units','inches','Position',[1 1 10 10],'Color','k','Visible','off');     
             colormap(gray(128))
     
             warning('off','MATLAB:contour:ConstantData')
