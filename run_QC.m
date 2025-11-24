@@ -41,19 +41,18 @@ toggle.fig5 = 0; % Subject motion
 toggle.fig6 = 0; % EPI brain masks: 1=png 2=gif
 toggle.fig7 = 0; % EPI parcellations
 
-%% ---- THIS BLOCK HAS NOT BEEN UPDATED AND WILL NOT RUN ----%%
 % -- nuissance regression func -- "
 % funcreg is a global flag that needs to be on for subcequent flags to prevent unnecessary overhead.
-funcreg = 0; 
+figsBOLD= 0; 
     toggle.fig8 = 0; % Regression plots
     toggle.fig9 = 0; % Time-Series, ROI size, and FC
-%% ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- %%
 
+%% ---- THIS BLOCK HAS NOT BEEN UPDATED AND WILL NOT RUN ----%%
 % -- dwi -- %
 toggle.fig10 = 0; % DWI EDDY and DTIFIT brain masks: 1=png 2=gif
 % registration
 % connectivity
-
+%% ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- %%
 
 %% -- Optional Parameter Presets -- %%
 % For any variable left empty, figures for all identified options will be
@@ -66,19 +65,19 @@ configs.parcs = {};
 
 configs.funcTAG = {'task-rest'}; % fix the scripts so that mult tags in cell can run
 
-configs.nuisanceMOT = {};
+%configs.nuisanceMOT = {};
 % or
-%configs.nuisanceMOT = {'AROMA'};
+configs.nuisanceMOT = {'AROMA'};
 %configs.nuisanceMOT = {'HMPreg'};
 
 configs.nuisanceTIS = {};
 % or
-%configs.nuisanceTIS = {'aCompCor'};
+configs.nuisanceTIS = {'aCompCor'};
 %configs.nuisanceTIS = {'meanPhysReg'};
 
-configs.GS = [];
+%configs.GS = [];
 % or
-%configs.GS = 1;
+configs.GS = 1;
 %configs.GS = 0;
 
 %% --------------------------------------------------------------------- %%
@@ -275,114 +274,36 @@ if toggle.fig7 == 1
 end
 
 %%  -- func - nuissance regression checks -- %%
-if funcreg == 1
-for ss=1:length(sub)
+% 8-Regression plots
+% 9-Timeseries
+if figsBOLD == 1
     disp('Generating EPI Nuisance Regression figures for:')
-    fprintf('-- %s -> \n', sub{ss})
-    
-    if isempty(configs.ses)
-        sesList=dir(fullfile(configs.path2data,sub{ss},'ses*'));
-        sesList = struct2cell(sesList)';
-        sesList = sesList(:,1);
-    else
-        sesList{1}=configs.ses;
-    end
-    
-    % ------------- Initialize path locations and file names --------------
-
-    for se=1:length(sesList)
-        ses = sesList{se};
-        sub_path=fullfile(configs.path2data,sub{ss},ses);
-        configs.path2EPI = fullfile(sub_path,'func');
-        fprintf('---- /%s -> ',ses)
-
-        if ~exist(configs.path2EPI,'dir')
-            fprintf(2,'func directory does not exist.\n')
+    for ss = 1:size(sub,1)
+        fprintf('-- %s %s -> \n', sub{ss,1}, sub{ss,2})
+        sub_path=fullfile(configs.path2data,sub{ss,1},sub{ss,2});
+        epi_path=fullfile(sub_path,'func',configs.funcTAG{1});
+        if ~exist(epi_path,'dir')
+            fprintf(2,' Directory does not exist!\n')
+            figsBOLD_error(ss,1)=1;
         else
-
-            if isempty(configs.nuisanceMOT)
-                tmp = dir(configs.path2EPI);
-                tmp(1:2)=[];
-                tmp(~[tmp.isdir])=[];
-                tmp=struct2cell(tmp);
-                configs.nuisanceMOT = tmp(1,:); clear tmp
+            figsBOLD_error(ss,1)=0;
+            qcpath=fullfile(sub_path,'qc',configs.funcTAG{1}); %output directory
+            if ~exist(qcpath,'dir')
+                mkdir(qcpath) % make output directory if it doesn't exist
             end
-        
-            for nM = 1:length(configs.nuisanceMOT)
-                configs.path2nuisance = fullfile(configs.path2EPI,configs.nuisanceMOT{nM});
-        
-                if isempty(configs.nuisanceTIS)
-                    if exist([configs.path2nuisance '/aCompCor'],'dir')
-                        configs.nuisanceTIS{1} = 'aCompCor';
-                    elseif exist([configs.path2nuisance '/aCompCorr'],'dir')
-                        configs.nuisanceTIS{1} = 'aCompCorr';
-                    end
-                    if exist([configs.path2nuisance '/meanPsysReg'],'dir')
-                        if isempty(configs.nuisanceTIS)
-                            configs.nuisanceTIS{1} = 'meanPhysReg';
-                        else
-                            configs.nuisanceTIS{2} = 'meanPhysReg';
-                        end
-                    end
-                end
-        
-                for nT = 1:length(configs.nuisanceTIS)
-                    configs.path2nuisanceTIS = fullfile(configs.path2nuisance,configs.nuisanceTIS{nT});
-        
-                    funcvolfiles = dir([configs.path2nuisanceTIS '/7_epi*nii.gz']);
-                    funcvolfiles=struct2cell(funcvolfiles); 
-                    funcvolfiles=funcvolfiles(1,:);
-                    gsidx=~cellfun(@isempty,(cellfun(@(x) strfind(x,'Gs'),funcvolfiles,'UniformOutput',false)));
-                    if configs.GS == 1
-                        idx=find(gsidx);
-                        for ii=1:length(idx)
-                            funcvolpaths{ii} = fullfile(configs.path2nuisanceTIS,funcvolfiles{idx(ii)});
-                        end
-                    elseif configs.GS == 0
-                        idx=find(~gsidx);
-                        for ii=1:length(idx)
-                            funcvolpaths{ii} = fullfile(configs.path2nuisanceTIS,funcvolfiles{idx(ii)});
-                        end
-                    elseif isempty(configs.GS)
-                        for ii= 1:length(gsidx)
-                            funcvolpaths{ii} = fullfile(configs.path2nuisanceTIS,funcvolfiles{ii});
-                        end
-                    end
-         
-                    % Residual plots
-                    if toggle.fig8 == 1
-                        disp('Generating voxel residuals figure...')
-                        if LinkOut==1
-                            f_fig_residual(configs.path2EPI,funcvolpaths,sub{ss},ses,Linkdir);
-                        else
-                            f_fig_residual(configs.path2EPI,funcvolpaths,sub{ss},ses);
-                        end             
-                        fprintf('done.\n')
-                    end
-                    close all
-                
-                    % Regional Time-series
-                    if toggle.fig9 == 1
-                        if nT==1 && nM==1
-                            disp('-- -- Generating time-series summaries figures:')
-                        end
-                        fprintf('-- -- -- %s %s -> \n',configs.nuisanceMOT{nM},configs.nuisanceTIS{nT})
-                        if LinkOut==1
-                            f_fig_timeseries(configs.path2EPI,configs.parcs,funcvolpaths,sub{ss},ses,Linkdir);
-                        else
-                            f_fig_timeseries(configs.path2EPI,configs.parcs,funcvolpaths,sub{ss},ses);
-                        end
-                        fprintf('done.\n')
-                    end
-                    close all
-                end
+            
+            if LinkOut==1
+                f_fig_epi_nuis(configs,sub(ss,:),toggle,LinkOut,Linkdir);
+            else
+                f_fig_epi_nuis(configs,sub(ss,:),toggle);
             end
         end
-        clear ses
     end
-    clear sesList
 end
-end
+         
+
+
+
 
 %% -- dwi -- %
 % Check DWI brain masks
