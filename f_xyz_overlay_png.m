@@ -13,7 +13,7 @@ else
 end
 
 % initialize figure
-fig_out=figure('Units','inches','Position',[1 1 6 6],'Color','k'); 
+fig_out=figure('Units','inches','Position',[1 1 6 6],'Color','k','Visible','off'); 
 
 % generate a grayscale colormap with red as the highest intensity color
 cmap=colormap(gray(128));

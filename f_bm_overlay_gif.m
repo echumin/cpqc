@@ -35,7 +35,7 @@ for ii=1:3
     BMStacks{ii}(BMStacks{ii}<=(2*Tmax))=0;
 end
 
-f=figure('Units','inches','Position',[1 1 10 10],'Color','k'); 
+f=figure('Units','inches','Position',[1 1 10 10],'Color','k','Visible','off'); 
 c2map=gray(128);
 cbmap=vertcat(c2map,[1 0 0]);
         

@@ -1,30 +1,20 @@
 function f_fig_mni_contour(configs,scanID,flag,linkdir)
 
 MNI = fullfile(configs.path2SM,'MNI_templates','MNI152_T1_1mm_brain.nii.gz');
-
 sub_path=fullfile(configs.path2data,scanID{1},scanID{2});
-if ~exist(sub_path,'dir')
-    fprintf(2,'%s/%s - Directory does not exist! Exiting...\n',scanID{1},scanID{2})
-    return
-else
-    qcpath=fullfile(sub_path,'qc'); %output directory
-    if ~exist(qcpath,'dir')
-        mkdir(qcpath) % make output directory if it doesn't exist
-    end
-end
-
+qcpath=fullfile(sub_path,'qc'); %output directory
 T1mnifile = fullfile(sub_path,'anat/registration','T1_warped.nii.gz');
+%%
+filename=fullfile(qcpath,[scanID{1} '_' scanID{2} '_2-mni_contour']);
+count=length(dir(strcat(filename,'*')));
+if count > 0
+    filename = [filename '_v' num2str(count+1)];
+end
 
 if exist(T1mnifile,'file')
     T1mni=niftiread(T1mnifile);
     upperT1=.9*(max(max(max(T1mni))));
     MNIt=niftiread(MNI);
-
-    filename=fullfile(qcpath,[scanID{1} '_' scanID{2} '_2-mni_contour']);
-    count=length(dir(strcat(filename,'*')));
-    if count > 0
-        filename = [filename '_v' num2str(count+1)];
-    end
 
     switch flag
         case 1
@@ -53,7 +43,7 @@ if exist(T1mnifile,'file')
             end
 
             % initialize figure
-            figure('Units','inches','Position',[1 1 15 3],'Color','k'); 
+            figure('Units','inches','Position',[1 1 15 3],'Color','k','Visible','off'); 
 
             % generate a grayscale colormap with red as the highest intensity color
             cmap=colormap(gray(128));
@@ -112,7 +102,7 @@ if exist(T1mnifile,'file')
 
         case 2
             % open figure
-            h=figure('Units','inches','Position',[1 1 10 10],'Color','k');     
+            h=figure('Units','inches','Position',[1 1 10 10],'Color','k','Visible','off');     
             colormap(gray(128))
     
             warning('off','MATLAB:contour:ConstantData')
@@ -174,5 +164,6 @@ if exist(T1mnifile,'file')
     end
 
 else
+    nofig(scanID,{'Not found: anat/registration/T1_warped'},filename,linkdir)
     fprintf('%s %s: No T1_warped.nii.gz found.\n',scanID{1},scanID{2})
 end

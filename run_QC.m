@@ -11,16 +11,13 @@
 % https://link/to/documentation.com
 % =========================================================================
 
-addpath('/N/project/cfn-commons/ConnPipe/cpqc')
+addpath('/N/u/echumin/Quartz/img_proc_tools/cpqc')
 
 %% -- Pipeline Supplement -- %%
 configs.path2SM = '/N/project/cfn-commons/neuroimaging_utils';
 
 %% -- Dataset Info -- %
-%configs.path2data = '/N/project/ADNI/neuroimaging/derivatives/connpipe';
-%configs.path2data = '/N/project/ENCOV/derivatives/connpipe';
-%configs.path2data = '/N/project/Plawecki_DRTS/derivatives/DRTS/connpipe';
-configs.path2data = '/N/project/alcnet/FHAN/derivatives/connpipe';
+configs.path2data = '/N/project/IADRC/derivatives/IADRCskyra/connpipe';
 
 % Leave empty to compile from path2data directories;
 % Otherwise provide path/name to a 2 column space delimited subj ses list.
@@ -30,8 +27,7 @@ configs.path2data = '/N/project/alcnet/FHAN/derivatives/connpipe';
 %% -- Links -- %%
 % Create symbolic links in new deriv directory for QC.
 LinkOut = 1;
-LinkDirName = 'connQC/2_masks_parcs';
-%LinkDirName = 'connQC/dwi_brainmask_run2';
+LinkDirName = 'connQC';
 
 %% -- Toggle figures on/off -- %%
 % -- anat -- %
@@ -45,19 +41,18 @@ toggle.fig5 = 0; % Subject motion
 toggle.fig6 = 0; % EPI brain masks: 1=png 2=gif
 toggle.fig7 = 0; % EPI parcellations
 
-%% ---- THIS BLOCK HAS NOT BEEN UPDATED AND WILL NOT RUN ----%%
 % -- nuissance regression func -- "
 % funcreg is a global flag that needs to be on for subcequent flags to prevent unnecessary overhead.
-funcreg = 0; 
+figsBOLD= 0; 
     toggle.fig8 = 0; % Regression plots
     toggle.fig9 = 0; % Time-Series, ROI size, and FC
-%% ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- %%
 
+%% ---- THIS BLOCK HAS NOT BEEN UPDATED AND WILL NOT RUN ----%%
 % -- dwi -- %
 toggle.fig10 = 0; % DWI EDDY and DTIFIT brain masks: 1=png 2=gif
 % registration
 % connectivity
-
+%% ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- %%
 
 %% -- Optional Parameter Presets -- %%
 % For any variable left empty, figures for all identified options will be
@@ -68,21 +63,21 @@ configs.parcs = {};
 %configs.parcs = {'DKT','schaefer200y7','Tian2','FSLsubcort','buckner-crblm','suit-crblm'};
 %configs.parcs = {'DKT','FSLsubcort','Tian2'};
 
-configs.funcTAG = {'task-restGust_run-01'}; % fix the scripts so that mult tags in cell can run
+configs.funcTAG = {'task-rest'}; % fix the scripts so that mult tags in cell can run
 
-configs.nuisanceMOT = {};
+%configs.nuisanceMOT = {};
 % or
-%configs.nuisanceMOT = {'AROMA'};
+configs.nuisanceMOT = {'AROMA'};
 %configs.nuisanceMOT = {'HMPreg'};
 
 configs.nuisanceTIS = {};
 % or
-%configs.nuisanceTIS = {'aCompCor'};
+configs.nuisanceTIS = {'aCompCor'};
 %configs.nuisanceTIS = {'meanPhysReg'};
 
-configs.GS = [];
+%configs.GS = [];
 % or
-%configs.GS = 1;
+configs.GS = 1;
 %configs.GS = 0;
 
 %% --------------------------------------------------------------------- %%
@@ -101,10 +96,22 @@ if toggle.fig1 ~= 0
     disp('Generating T1_brain_mask figures for:')
     for ss = 1:size(sub,1)
         fprintf('-- %s %s -> \n', sub{ss,1}, sub{ss,2})
-        if LinkOut==1
-            f_fig_t1_mask(configs,sub(ss,:),toggle.fig1,Linkdir); %DONE - NEEDS COMMENTING
+        sub_path=fullfile(configs.path2data,sub{ss,1},sub{ss,2});
+        if ~exist(sub_path,'dir')
+            fprintf(2,' Directory does not exist!\n')
+            fig1_error(ss,1)=1;
         else
-            f_fig_t1_mask(configs,sub(ss,:),toggle.fig1); %DONE - NEEDS COMMENTING
+            fig1_error(ss,1)=0;
+            qcpath=fullfile(sub_path,'qc'); %output directory
+            if ~exist(qcpath,'dir')
+                mkdir(qcpath) % make output directory if it doesn't exist
+            end
+            
+            if LinkOut==1
+                f_fig_t1_mask(configs,sub(ss,:),toggle.fig1,Linkdir); %DONE - NEEDS COMMENTING
+            else
+                f_fig_t1_mask(configs,sub(ss,:),toggle.fig1); %DONE - NEEDS COMMENTING
+            end
         end
     end
 end
@@ -114,10 +121,22 @@ if toggle.fig2 ~= 0
     disp('Generating MNI CONTOUR figures for:')
     for ss = 1:size(sub,1)
         fprintf('-- %s %s -> \n', sub{ss,1}, sub{ss,2})
-        if LinkOut==1
-            f_fig_mni_contour(configs,sub(ss,:),toggle.fig2,Linkdir);
+        sub_path=fullfile(configs.path2data,sub{ss,1},sub{ss,2});
+        if ~exist(sub_path,'dir')
+            fprintf(2,' Directory does not exist!\n')
+            fig2_error(ss,1)=1;
         else
-            f_fig_mni_contour(configs,sub(ss,:),toggle.fig2);
+            fig2_error(ss,1)=0;
+            qcpath=fullfile(sub_path,'qc'); %output directory
+            if ~exist(qcpath,'dir')
+                mkdir(qcpath) % make output directory if it doesn't exist
+            end
+
+            if LinkOut==1
+                f_fig_mni_contour(configs,sub(ss,:),toggle.fig2,Linkdir);
+            else
+                f_fig_mni_contour(configs,sub(ss,:),toggle.fig2);
+            end
         end
     end   
 end
@@ -127,16 +146,28 @@ if toggle.fig3 == 1
     disp('Generating T1 ROI figures for:')
     for ss = 1:size(sub,1)
         fprintf('-- %s %s -> \n', sub{ss,1}, sub{ss,2})
-        if LinkOut==1
-            fprintf('CSF and Cerebellum:\n')
-            f_fig_t1_roi(configs,sub(ss,:),Linkdir)
-            fprintf('Subcortical:\n')
-            f_fig_t1_subc(configs,sub(ss,:),Linkdir)
+        sub_path=fullfile(configs.path2data,sub{ss,1},sub{ss,2});
+        if ~exist(sub_path,'dir')
+            fprintf(2,' Directory does not exist!\n')
+            figs3_error(ss,1)=1;
         else
-            fprintf('CSF and Cerebellum:\n')
-            f_fig_t1_roi(configs,sub(ss,:))
-            fprintf('Subcortical:\n')
-            f_fig_t1_subc(configs,sub(ss,:))
+            figs3_error(ss,1)=0;
+            qcpath=fullfile(sub_path,'qc'); %output directory
+            if ~exist(qcpath,'dir')
+                mkdir(qcpath) % make output directory if it doesn't exist
+            end
+
+            if LinkOut==1
+                fprintf('CSF and Cerebellum:\n')
+                f_fig_t1_roi(configs,sub(ss,:),Linkdir)
+                fprintf('Subcortical:\n')
+                f_fig_t1_subc(configs,sub(ss,:),Linkdir)
+            else
+                fprintf('CSF and Cerebellum:\n')
+                f_fig_t1_roi(configs,sub(ss,:))
+                fprintf('Subcortical:\n')
+                f_fig_t1_subc(configs,sub(ss,:))
+            end
         end
     end
 end
@@ -146,10 +177,22 @@ if toggle.fig4 == 1
     disp('Generating T1_GM_parc figures for:')
     for ss = 1:size(sub,1)
         fprintf('-- %s %s -> \n', sub{ss,1}, sub{ss,2})
-        if LinkOut==1
-            f_fig_t1_parc(configs,sub(ss,:),Linkdir);
+        sub_path=fullfile(configs.path2data,sub{ss,1},sub{ss,2});
+        if ~exist(sub_path,'dir')
+            fprintf(2,' Directory does not exist!\n')
+            fig4_error(ss,1)=1;
         else
-            f_fig_t1_parc(configs,sub(ss,:));
+            fig4_error(ss,1)=0;
+            qcpath=fullfile(sub_path,'qc'); %output directory
+            if ~exist(qcpath,'dir')
+                mkdir(qcpath) % make output directory if it doesn't exist
+            end
+
+            if LinkOut==1
+                f_fig_t1_parc(configs,sub(ss,:),Linkdir);
+            else
+                f_fig_t1_parc(configs,sub(ss,:));
+            end
         end
     end
 end
@@ -160,10 +203,22 @@ if toggle.fig5 == 1
     disp('Generating MCFLIRT MOTION figures for:')
     for ss = 1:size(sub,1)
         fprintf('-- %s %s -> \n', sub{ss,1}, sub{ss,2})
-        if LinkOut==1
-            f_fig_mcflirt_mot(configs,sub(ss,:),Linkdir);
+        sub_path=fullfile(configs.path2data,sub{ss,1},sub{ss,2});
+        if ~exist(sub_path,'dir')
+            fprintf(2,' Directory does not exist!\n')
+            fig5_error(ss,1)=1;
         else
-            f_fig_mcflirt_mot(configs,sub(ss,:));
+            fig5_error(ss,1)=0;
+            qcpath=fullfile(sub_path,'qc',configs.funcTAG{1}); %output directory
+            if ~exist(qcpath,'dir')
+                mkdir(qcpath) % make output directory if it doesn't exist
+            end
+
+            if LinkOut==1
+                f_fig_mcflirt_mot(configs,sub(ss,:),Linkdir);
+            else
+                f_fig_mcflirt_mot(configs,sub(ss,:));
+            end
         end
     end
 end
@@ -173,10 +228,22 @@ if toggle.fig6 ~= 0
     disp('Generating EPI MASK figures for:')
     for ss = 1:size(sub,1)
         fprintf('-- %s %s -> \n', sub{ss,1}, sub{ss,2})
-        if LinkOut==1
-            f_fig_epi_mask(configs,sub(ss,:),toggle.fig6,Linkdir);
+        sub_path=fullfile(configs.path2data,sub{ss,1},sub{ss,2});
+        if ~exist(sub_path,'dir')
+            fprintf(2,' Directory does not exist!\n')
+            fig6_error(ss,1)=1;
         else
-            f_fig_epi_mask(configs,sub(ss,:),toggle.fig6);
+            fig6_error(ss,1)=0;
+            qcpath=fullfile(sub_path,'qc',configs.funcTAG{1}); %output directory
+            if ~exist(qcpath,'dir')
+                mkdir(qcpath) % make output directory if it doesn't exist
+            end
+
+            if LinkOut==1
+                f_fig_epi_mask(configs,sub(ss,:),toggle.fig6,Linkdir);
+            else
+                f_fig_epi_mask(configs,sub(ss,:),toggle.fig6);
+            end
         end
     end
 end
@@ -186,123 +253,57 @@ if toggle.fig7 == 1
     disp('Generating EPI PARC figures for:')
     for ss = 1:size(sub,1)
         fprintf('-- %s %s -> \n', sub{ss,1}, sub{ss,2})
-        if LinkOut==1
-            f_fig_epi_parc(configs,sub(ss,:),Linkdir);
+        sub_path=fullfile(configs.path2data,sub{ss,1},sub{ss,2});
+        if ~exist(sub_path,'dir')
+            fprintf(2,' Directory does not exist!\n')
+            fig7_error(ss,1)=1;
         else
-            f_fig_epi_parc(configs,sub(ss,:));
+            fig7_error(ss,1)=0;
+            qcpath=fullfile(sub_path,'qc',configs.funcTAG{1}); %output directory
+            if ~exist(qcpath,'dir')
+                mkdir(qcpath) % make output directory if it doesn't exist
+            end
+
+            if LinkOut==1
+                f_fig_epi_parc(configs,sub(ss,:),Linkdir);
+            else
+                f_fig_epi_parc(configs,sub(ss,:));
+            end
         end
     end
 end
 
 %%  -- func - nuissance regression checks -- %%
-if funcreg == 1
-for ss=1:length(sub)
+% 8-Regression plots
+% 9-Timeseries
+if figsBOLD == 1
     disp('Generating EPI Nuisance Regression figures for:')
-    fprintf('-- %s -> \n', sub{ss})
-    
-    if isempty(configs.ses)
-        sesList=dir(fullfile(configs.path2data,sub{ss},'ses*'));
-        sesList = struct2cell(sesList)';
-        sesList = sesList(:,1);
-    else
-        sesList{1}=configs.ses;
-    end
-    
-    % ------------- Initialize path locations and file names --------------
-
-    for se=1:length(sesList)
-        ses = sesList{se};
-        sub_path=fullfile(configs.path2data,sub{ss},ses);
-        configs.path2EPI = fullfile(sub_path,'func');
-        fprintf('---- /%s -> ',ses)
-
-        if ~exist(configs.path2EPI,'dir')
-            fprintf(2,'func directory does not exist.\n')
+    for ss = 1:size(sub,1)
+        fprintf('-- %s %s -> \n', sub{ss,1}, sub{ss,2})
+        sub_path=fullfile(configs.path2data,sub{ss,1},sub{ss,2});
+        epi_path=fullfile(sub_path,'func',configs.funcTAG{1});
+        if ~exist(epi_path,'dir')
+            fprintf(2,' Directory does not exist!\n')
+            figsBOLD_error(ss,1)=1;
         else
-
-            if isempty(configs.nuisanceMOT)
-                tmp = dir(configs.path2EPI);
-                tmp(1:2)=[];
-                tmp(~[tmp.isdir])=[];
-                tmp=struct2cell(tmp);
-                configs.nuisanceMOT = tmp(1,:); clear tmp
+            figsBOLD_error(ss,1)=0;
+            qcpath=fullfile(sub_path,'qc',configs.funcTAG{1}); %output directory
+            if ~exist(qcpath,'dir')
+                mkdir(qcpath) % make output directory if it doesn't exist
             end
-        
-            for nM = 1:length(configs.nuisanceMOT)
-                configs.path2nuisance = fullfile(configs.path2EPI,configs.nuisanceMOT{nM});
-        
-                if isempty(configs.nuisanceTIS)
-                    if exist([configs.path2nuisance '/aCompCor'],'dir')
-                        configs.nuisanceTIS{1} = 'aCompCor';
-                    elseif exist([configs.path2nuisance '/aCompCorr'],'dir')
-                        configs.nuisanceTIS{1} = 'aCompCorr';
-                    end
-                    if exist([configs.path2nuisance '/meanPsysReg'],'dir')
-                        if isempty(configs.nuisanceTIS)
-                            configs.nuisanceTIS{1} = 'meanPhysReg';
-                        else
-                            configs.nuisanceTIS{2} = 'meanPhysReg';
-                        end
-                    end
-                end
-        
-                for nT = 1:length(configs.nuisanceTIS)
-                    configs.path2nuisanceTIS = fullfile(configs.path2nuisance,configs.nuisanceTIS{nT});
-        
-                    funcvolfiles = dir([configs.path2nuisanceTIS '/7_epi*nii.gz']);
-                    funcvolfiles=struct2cell(funcvolfiles); 
-                    funcvolfiles=funcvolfiles(1,:);
-                    gsidx=~cellfun(@isempty,(cellfun(@(x) strfind(x,'Gs'),funcvolfiles,'UniformOutput',false)));
-                    if configs.GS == 1
-                        idx=find(gsidx);
-                        for ii=1:length(idx)
-                            funcvolpaths{ii} = fullfile(configs.path2nuisanceTIS,funcvolfiles{idx(ii)});
-                        end
-                    elseif configs.GS == 0
-                        idx=find(~gsidx);
-                        for ii=1:length(idx)
-                            funcvolpaths{ii} = fullfile(configs.path2nuisanceTIS,funcvolfiles{idx(ii)});
-                        end
-                    elseif isempty(configs.GS)
-                        for ii= 1:length(gsidx)
-                            funcvolpaths{ii} = fullfile(configs.path2nuisanceTIS,funcvolfiles{ii});
-                        end
-                    end
-         
-                    % Residual plots
-                    if toggle.fig8 == 1
-                        disp('Generating voxel residuals figure...')
-                        if LinkOut==1
-                            f_fig_residual(configs.path2EPI,funcvolpaths,sub{ss},ses,Linkdir);
-                        else
-                            f_fig_residual(configs.path2EPI,funcvolpaths,sub{ss},ses);
-                        end             
-                        fprintf('done.\n')
-                    end
-                    close all
-                
-                    % Regional Time-series
-                    if toggle.fig9 == 1
-                        if nT==1 && nM==1
-                            disp('-- -- Generating time-series summaries figures:')
-                        end
-                        fprintf('-- -- -- %s %s -> \n',configs.nuisanceMOT{nM},configs.nuisanceTIS{nT})
-                        if LinkOut==1
-                            f_fig_timeseries(configs.path2EPI,configs.parcs,funcvolpaths,sub{ss},ses,Linkdir);
-                        else
-                            f_fig_timeseries(configs.path2EPI,configs.parcs,funcvolpaths,sub{ss},ses);
-                        end
-                        fprintf('done.\n')
-                    end
-                    close all
-                end
+            
+            if LinkOut==1
+                f_fig_epi_nuis(configs,sub(ss,:),toggle,LinkOut,Linkdir);
+            else
+                f_fig_epi_nuis(configs,sub(ss,:),toggle);
             end
         end
-        clear ses
     end
-    clear sesList
 end
-end
+         
+
+
+
 
 %% -- dwi -- %
 % Check DWI brain masks

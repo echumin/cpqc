@@ -36,7 +36,7 @@ for ii=1:length(slc)
 end
 
 % initialize figure
-fig_out=figure('Units','inches','Position',[1 1 15 3*length(OL)],'Color','k'); 
+fig_out=figure('Units','inches','Position',[1 1 15 3*length(OL)],'Color','k','Visible','off'); 
 
 % generate a grayscale colormap with red as the highest intensity color
 cmap=colormap(gray(128));
